@@ -1,0 +1,261 @@
+﻿@using System.Web.Optimization
+@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.TestMstDTO
+
+@{
+    ViewBag.Title = "Index";
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    Int64 LoggedCompId = Convert.ToInt64(System.Web.HttpContext.Current.Session["loggedCompID"]);
+    Int64 loggedUserID = Convert.ToInt64(System.Web.HttpContext.Current.Session["loggedUserID"]);
+
+    var query = from m in db.AslRoleDbSet
+                where m.COMPID == LoggedCompId && m.USERID == loggedUserID && m.CONTROLLERNAME == "Test"
+                select new { m.STATUS,m.INSERTR,m.UPDATER,m.DELETER };
+    string status = "", insert = "", update = "", delete = "";
+    foreach (var S in query)
+    {
+        status = S.STATUS;
+        insert = S.INSERTR;
+        update = S.UPDATER;
+        delete = S.DELETER;
+    }
+
+    if (status == "I")
+    {
+        Response.Redirect("~/GraphView/Index");
+    }
+}
+
+<link href="~/Content/Angular-File/ng-grid.css" rel="stylesheet" />
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+
+    <div id="contentHeaderBox">
+        <h1 style="padding-left:16px">Test Information</h1>
+        <div class="btn-group pull-right" id="editOption">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
+                <i class="fa fa-cog"></i>
+            </button>
+            <ul class="dropdown-menu pull-right" style="" role="menu">
+                <li>
+                    <a href="@Url.Action("TestMasterData_Information", "Test")"><i class="fa fa-file-text"></i> Test Category Information</a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+    <br />
+
+    <div class="col-md-12">
+        <div class="form-group">
+            <div ng-app="TestApp" data-ng-controller="ApiTestController">
+
+                <div class="row">
+                    <form name="addTestMaster" data-ng-show="addMode" @*style="width:600px;margin:0px auto;"*@>
+                        @Html.HiddenFor(model => model.COMPID, new { id = "txtcompid", style = "width:3em;", @Value = LoggedCompId })
+                        @Html.HiddenFor(model => model.INSUSERID, new { id = "txtInsertUserid", style = "width:3em;", @Value = loggedUserID })
+                        @Html.HiddenFor(model => model.Update, new { id = "txt_Updateid", style = "width:3em;", @Value = update })
+                        @Html.HiddenFor(model => model.Delete, new { id = "txt_Deleteid", style = "width:3em;", @Value = delete })
+                        @Html.HiddenFor(model => model.Insert, new { id = "txt_Insertid", style = "width:3em;", @Value = insert })
+                        @Html.HiddenFor(model => model.TCATID, new { id = "TestCatId", style = "width:3em;" })
+                       
+                        <div class="col-md-3">
+                            @Html.Label("name", "Test Category Name", htmlAttributes: new { @class = "control-label" })
+                        </div>
+                        <div class="col-md-6">
+                            @Html.TextBoxFor(model => model.TCATNM, htmlAttributes: new { id = "TestCatName", @class = "form-control", autofocus = true })
+                            @Html.ValidationMessageFor(model => model.TCATNM, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-3">
+                            <input type="submit" value="Submit" data-ng-click="add($event)" class="btn btn-primary" />
+                        </div>
+
+                        @Html.HiddenFor(model => model.INSLTUDE, new { id = "latlon" })
+                        <input id="lat" type="hidden" />
+                        <input id="lon" type="hidden" />
+                    </form>
+                </div>
+                <br />
+
+                <div class="row">
+                    @*<div class="col-md-1">
+                    </div>*@
+                    <div class="col-md-12">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">Category Wise Test Data </div>
+                            <div class="table-responsive">
+                                <table @*class="table table-bordered table-hover"*@ class="table table-striped" @*style="width:900px"*@>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th></th>
+                                    </tr>
+                                    <tr>
+                                        @*<td><label class="control-label">Test Name :</label><input type="text" class="form-control" data-ng-model="newChild.TESTNM" id="testnm" required /></td>*@
+                                        <td style="width: 77%;"><input type="text" class="form-control" data-ng-model="newChild.TESTNM" id="testnm" required /></td>
+                                        <td><input type="submit" value="Insert" data-ng-click="addrow($event)" class="btn btn-primary" /></td>
+                                    </tr>
+                                    <tr data-ng-repeat="testitem in TestMasterData">
+
+                                        <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                        <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TCATID }}</p></td>
+                                        <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TESTID }}</p></td>
+                                        <td style="width: 77%;">
+                                            <p data-ng-hide="testitem.editMode">{{ testitem.TESTNM }}</p>
+                                            <input class="form-control" data-ng-show="testitem.editMode" type="text" data-ng-model="testitem.TESTNM" id="gridTestName" />
+                                        </td>
+                                        <td>
+                                            <p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem(testitem)" href="javascript:;">Delete</a></p>
+                                            <p data-ng-show="testitem.editMode"><a data-ng-click="save(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel(testitem)" href="javascript:;">Cancel</a></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="col-md-1">
+                    </div>*@
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    //Latitute & longitude
+    <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+    <script language="javascript" type="text/javascript">
+        $(function () {
+            navigator.geolocation.getCurrentPosition(showPosition);
+            //navigator.geolocation.getCurrentPosition(showPosition, positionError);
+
+            function showPosition(position) {
+                var coordinates = position.coords;
+                $("#lat").val(coordinates.latitude);
+                $("#lon").val(coordinates.longitude);
+
+                $("#latlon").val(
+                    $("#lat").val() + "," + $("#lon").val()
+                );
+            }
+        });
+    </script>
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $('#TestCatName').autocomplete({
+                source: function (request, response) {
+                    var companyid = $("#txtcompid").val();
+                    $.ajax({
+                        url: '/api/GetCategoryList_TagSearch',
+                        type: 'GET',
+                        cache: false,
+                        data: { character: request.term, compid: companyid },
+                        dataType: 'json',
+                        success: function (data) {
+                            response($.map(data, function (item) {
+                                return {
+                                    label: item.TCATNM,
+                                    value: item.TCATNM,
+                                    id: item.TCATID,
+                                };
+                            }));
+                        }
+                    });
+                },
+                select: function (event, ui) {
+                    $('#TestCatName').val(ui.item.label);
+                    $('#TestCatId').val(ui.item.id);
+                    return false;
+                },
+                change: $('#TestCatName').keyup(function (e) {
+                    $('#TestCatName').keyup(_.debounce(txtOneChanged(e.keyCode), 5000000000));
+                }),
+            });
+
+
+
+
+            function txtOneChanged(value) {
+                if (value != 8) {
+                    var changedText = $("#TestCatName").val();
+                    var compid = $("#txtcompid").val();
+                    var testCatName = document.getElementById('TestCatName');
+                    var testCatId = document.getElementById('TestCatId');
+
+                    if (changedText != "") {
+                        $.getJSON(
+                            '/api/CategoryNameChanged', { "ChangedText": changedText, "Compid": compid },
+                            function (result) {
+                                testCatName.value = result[0].TCATNM;
+                                testCatId.value = result[0].TCATID;
+                            });
+                    }
+                }
+            }
+
+
+        });
+    </script>
+
+
+
+    <style type="text/css">
+        .ui-autocomplete {
+            position: absolute;
+            cursor: default;
+            background: #f0ffff;
+            max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+        }
+    </style>
+}
+
+
+
+<link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+@*<script src="~/Content/jquery-2.1.4/jquery-2.1.4.min.js"></script>*@
+<script src="~/Scripts/jquery-1.9.1.min.js"></script>
+<script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+
+<script src="~/Scripts/angularjs/1.0.5/angular.js"></script>
+<script src="~/Scripts/Test/Test.js"></script>
+<script src="~/Scripts/angularjs/ui-bootstrap-tpls-0.4.0.js"></script>
+
+<script src="~/Scripts/Underscore.js"></script>
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+}

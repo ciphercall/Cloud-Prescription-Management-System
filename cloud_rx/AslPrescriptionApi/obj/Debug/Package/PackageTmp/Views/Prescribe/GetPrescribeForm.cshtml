@@ -1,0 +1,497 @@
+﻿@using System.Data
+@using System.Data.SqlClient
+@using AslPrescriptionApi.DataAccess
+@using AslPrescriptionApi.Models
+@using AslPrescriptionApi.Models.DTO
+@using Microsoft.Ajax.Utilities
+@model AslPrescriptionApi.Models.DTO.PrescMst_PrescribeDTO
+
+@{
+    ViewBag.Title = "GetPrescribeForm";
+    Layout = null;
+
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    var companyId = Convert.ToInt64(Model.COMPID);
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+
+    string HL1 = "", HL2 = "", HL3 = "", HL4 = "", HL5 = "", HM1 = "", HM2 = "", HM3 = "", HR1 = "", HR2 = "", HR3 = "", HR4 = "", HR5 = "",
+    FL1 = "", FL2 = "", FL3 = "", FL4 = "", FM1 = "", FM2 = "", FM3 = "", FR1 = "", FR2 = "", FR3 = "", FR4 = "";
+    var getPadInfo = (from m in db.RxPadDbSet where m.COMPID == companyId select m).ToList();
+    foreach (var pad in getPadInfo)
+    {
+        HL1 = pad.HL1;
+        HL2 = pad.HL2;
+        HL3 = pad.HL3;
+        HL4 = pad.HL4;
+        HL5 = pad.HL5;
+
+        HM1 = pad.HM1;
+        HM2 = pad.HM2;
+        HM3 = pad.HM3;
+
+        HR1 = pad.HR1;
+        HR2 = pad.HR2;
+        HR3 = pad.HR3;
+        HR4 = pad.HR4;
+        HR5 = pad.HR5;
+
+        FL1 = pad.FL1;
+        FL2 = pad.FL2;
+        FL3 = pad.FL3;
+        FL4 = pad.FL4;
+
+        FM1 = pad.FM1;
+        FM2 = pad.FM2;
+        FM3 = pad.FM3;
+
+        FR1 = pad.FR1;
+        FR2 = pad.FR2;
+        FR3 = pad.FR3;
+        FR4 = pad.FR4;
+    }
+
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>Pad</title>
+    <link href="~/Content/ReportCSS/style.css" rel="stylesheet" />
+</head>
+
+<body style=" background-color:#fafafa;">
+    <div style="width: 960px; margin: 0px auto; border: 1px solid #d3d3d3; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); background: none repeat scroll 0 0 white;">
+        <table id="mainTable" border="0" width="100%">
+            <thead>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #006859; height: 110px;">
+                    <td colspan="18">
+                        <table style="width: 100%">
+                            <tr>
+                                <td colspan="6" align="left" style="padding-left: 4px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HL1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL4</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL5</p>
+                                </td>
+                                <td colspan="6" align="center" style=" width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HM1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HM2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HM3</p>
+                                </td>
+                                <td colspan="6" align="right" style="padding-right: 8px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HR1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR4</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR5</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+                @{
+                    var patientName = Convert.ToString(Model.RXPNM);
+                    var patientIDM = Convert.ToInt64(Model.RXPIDM);
+                    var patientid = Convert.ToInt64(Model.RXPID);
+                    var patientType = Convert.ToString(Model.RXPTP);
+                    var TransDate = Convert.ToDateTime(Model.TRANSDT);
+                    var MemoNo = Convert.ToString(Model.TRANSNO);
+                    var NextDate = Convert.ToString(Model.NXTDT);
+                    var remarks = Convert.ToString(Model.REMARKS);
+
+
+                    string TransDate_1 = Convert.ToString(TransDate);
+                    DateTime MyDateTime = DateTime.Parse(TransDate_1);
+                    var TransactionDate = MyDateTime.ToString("dd-MMM-yyyy");
+
+                    string nextdate = "";
+                    if (NextDate != null)
+                    {
+                        DateTime MyDateTime2 = DateTime.Parse(NextDate);
+                        nextdate = MyDateTime2.ToString("dd-MMM-yyyy");
+                    }
+
+
+                    Int64 age = 0;
+                    string Gender = "";
+                    var findPatientAge = (from m in db.RxPatientDbSet
+                                          where m.COMPID == companyId && m.RXPID == patientid && m.RXPNM == patientName
+                                          select new { m.AGE, m.GENDER }).ToList();
+                    foreach (var x in findPatientAge)
+                    {
+                        age = x.AGE;
+                        Gender = x.GENDER;
+                    }
+                }
+
+                <tr><td colspan="18"><hr style="height: 1px;color: #040404;background-color: #040404;border: none;"></td></tr>
+                <tr id="patientInfo" style="height: 20px;">
+                    <td colspan="1" style="font-weight: bold;border-left: 1px solid black;padding-left: 7px;">ID:</td>
+                    <td colspan="1" align="left">@patientIDM</td>
+                    <td colspan="2" style="font-weight: bold" align="right">Name:</td>
+                    <td colspan="3" align="left">@patientName</td>
+                    <td colspan="1" style="font-weight: bold" align="right">Gender:</td>
+                    <td colspan="1" align="left">@Gender</td>
+                    <td colspan="1" style="font-weight: bold" align="right">Age:</td>
+                    <td colspan="1" align="left">@age</td>
+                    <td colspan="1" style="font-weight: bold" align="right">Date:</td>
+                    <td colspan="2" align="left">@TransactionDate</td>
+                    <td colspan="2" style="font-weight: bold" align="right">Serial No:</td>
+                    <td colspan="2" align="right" style="border-right: 1px solid black;padding-right: 7px;">@MemoNo</td>
+                </tr>
+                <tr><td colspan="18"><hr style="height: 1px;color: #040404;background-color: #040404;border: none;"></td></tr>
+
+                <tr id="databody" style="height: 1130px;">
+                    <td colspan="6" style="border-left: 1px solid Black;vertical-align: top;">
+                        <table style="width: 100%">
+
+                            @{
+                                //Get Diagnosis (1st part)
+                                System.Data.SqlClient.SqlConnection conn1 = new System.Data.SqlClient.SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["AslPrescriptionApiDbContext"].ToString());
+                                string query1 = string.Format(
+                                    @" SELECT RES1ST, ID ,COMPID, TRANSNO,TRANSSL,ENTRYTP FROM(
+                                    SELECT (CASE WHEN SHOWTP = 'EN' THEN GHEADEN ELSE GHEADBG END) RES1ST,RX_PRESCRIBE.ID, RX_PRESCRIBE.COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE INNER JOIN RX_GHEAD ON RX_PRESCRIBE.GHEADID = RX_GHEAD.GHEADID
+                                    WHERE RX_PRESCRIBE.COMPID = '{0}' AND RX_PRESCRIBE.COMPID = RX_GHEAD.COMPID AND ENTRYTP = 'RECORD'
+                                    AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '1ST'
+                                    UNION
+                                    SELECT RESULT RES1ST ,ID ,COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE
+                                    WHERE COMPID ='{0}'AND ENTRYTP = 'MANUAL' AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '1ST'
+                                    ) A order by ID ASC ",
+                                    companyId, MemoNo);
+                                System.Data.SqlClient.SqlCommand cmd1 = new System.Data.SqlClient.SqlCommand(query1, conn1);
+                                conn1.Open();
+                                SqlDataAdapter da1 = new SqlDataAdapter(cmd1);
+                                DataTable ds1 = new DataTable();
+                                da1.Fill(ds1);
+
+                                foreach (DataRow row in ds1.Rows)
+                                {
+                                    <tr>
+                                        <td><h4 style="color: black;padding-left:4px; font-weight: bold">Diagonosis :</h4></td>
+                                    </tr>
+                                    break;
+                                }
+
+                                string diagnosisName = "";
+                                foreach (DataRow row in ds1.Rows)
+                                {
+                                    diagnosisName = row["RES1ST"].ToString();
+                                    <tr>
+                                        <td><p style="color: black;padding-left:30px;">@diagnosisName</p></td>
+                                    </tr>
+
+                                }
+                            }
+
+
+
+
+                            <tr>
+                                <td><br /></td>
+                            </tr>
+
+                            @{
+                                //Get General Examination (2nd part)
+                                System.Data.SqlClient.SqlConnection conn2 = new System.Data.SqlClient.SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["AslPrescriptionApiDbContext"].ToString());
+                                string query2 = string.Format(
+                                    @"SELECT GHEADID,GE,Result, ID ,COMPID, TRANSNO,TRANSSL,ENTRYTP FROM
+                                    ( SELECT RX_PRESCRIBE.GHEADID, (CASE WHEN SHOWTP = 'EN' THEN GHEADEN ELSE GHEADBG END) GE, Result, RX_PRESCRIBE.ID, RX_PRESCRIBE.COMPID, TRANSNO,TRANSSL,ENTRYTP ,PARTSL
+                                    FROM RX_PRESCRIBE LEFT OUTER JOIN RX_GHEAD ON RX_PRESCRIBE.GHEADID = RX_GHEAD.GHEADID
+                                    WHERE RX_PRESCRIBE.COMPID = '{0}' AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '2ND'
+                                    ) A
+                                    ORDER BY ID ASC",
+                                    companyId, MemoNo);
+                                System.Data.SqlClient.SqlCommand cmd2 = new System.Data.SqlClient.SqlCommand(query2, conn2);
+                                conn2.Open();
+                                SqlDataAdapter da2 = new SqlDataAdapter(cmd2);
+                                DataTable ds2 = new DataTable();
+                                da2.Fill(ds2);
+
+
+                                foreach (DataRow row in ds2.Rows)
+                                {
+                                    <tr>
+                                        <td><h4 style="color: black;padding-left:4px; font-weight: bold">General Examination :</h4></td>
+                                    </tr>
+                                    @*<tr style="outline: thin solid;">
+                                            <td colspan="9" align="center">GeneralExamintaion</td>
+                                            <td colspan="9" align="center" style="border-left: 1px solid Black;">Result</td>
+                                        </tr>*@
+                                    break;
+                                }
+
+                                string GeneralE = "", result = "";
+                                foreach (DataRow row in ds2.Rows)
+                                {
+                                    GeneralE = row["GE"].ToString();
+                                    result = row["Result"].ToString();
+                                    if (GeneralE == "")
+                                    {
+                                        <tr>
+                                            <td><p style="color: black;padding-left:30px;">@result</p></td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td><p style="color: black;padding-left:30px;">@GeneralE-@result</p></td>
+                                        </tr>
+                                    }
+
+                                }
+                            }
+
+
+                            <tr>
+                                <td><br /></td>
+                            </tr>
+                            @{
+                                //Get Investigation (3rd part)
+                                System.Data.SqlClient.SqlConnection conn3 = new System.Data.SqlClient.SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["AslPrescriptionApiDbContext"].ToString());
+                                string query3 = string.Format(
+               @" SELECT RES3RD, ID ,COMPID, TRANSNO,TRANSSL,ENTRYTP FROM( 
+ SELECT TESTNM RES3RD,RX_PRESCRIBE.ID, RX_PRESCRIBE.COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE INNER JOIN RX_TEST ON RX_PRESCRIBE.GHEADID = RX_TEST.TESTID 
+ WHERE RX_PRESCRIBE.COMPID = '{0}' AND RX_PRESCRIBE.COMPID = RX_TEST.COMPID AND ENTRYTP = 'RECORD' 
+ AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '3RD' 
+ UNION 
+ SELECT RESULT RES3RD ,ID ,COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE 
+ WHERE COMPID ='{0}'AND ENTRYTP = 'MANUAL' AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '3RD' 
+ ) A order by ID ASC ",
+               companyId, MemoNo);
+                                System.Data.SqlClient.SqlCommand cmd3 = new System.Data.SqlClient.SqlCommand(query3, conn3);
+                                conn3.Open();
+                                SqlDataAdapter da3 = new SqlDataAdapter(cmd3);
+                                DataTable ds3 = new DataTable();
+                                da3.Fill(ds3);
+                                foreach (DataRow row in ds3.Rows)
+                                {
+                                    <tr>
+                                        <td><h4 style="color: black;padding-left:4px; font-weight: bold">Investigation :</h4></td>
+                                    </tr>
+                                    break;
+                                }
+                                string investigation = "";
+                                foreach (DataRow row in ds3.Rows)
+                                {
+                                    investigation = row["RES3RD"].ToString();
+                                    <tr>
+                                        <td><p style="color: black;padding-left:30px;">@investigation</p></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </td>
+                    <td colspan="12" style="border-left: 1px solid Black;border-right: 1px solid black; vertical-align: top; ">
+                        <table style="width: 100%">
+                            @{
+                                //Get RX Medicine (4th part)
+                                System.Data.SqlClient.SqlConnection conn4 = new System.Data.SqlClient.SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["AslPrescriptionApiDbContext"].ToString());
+                                string query4 = string.Format(
+               @" SELECT RES4TH,(CASE WHEN SHOWTP = 'EN' THEN GHEADEN ELSE GHEADBG END) DoseName, A.ID ,A.COMPID, TRANSNO, TRANSSL, ENTRYTP, DDMMTP, DDMMQTY FROM(
+SELECT MEDINM RES4TH,DOSEID ,RX_PRESCRIBE.ID, RX_PRESCRIBE.COMPID, TRANSNO,TRANSSL,ENTRYTP,DDMMTP,DDMMQTY FROM
+RX_PRESCRIBE INNER JOIN RX_MEDICARE ON RX_PRESCRIBE.GHEADID = RX_MEDICARE.MEDIID
+WHERE RX_PRESCRIBE.COMPID = '{0}' AND RX_PRESCRIBE.COMPID = RX_MEDICARE.COMPID AND ENTRYTP = 'RECORD'
+AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '4TH'
+UNION
+SELECT RESULT RES4TH,DOSEID ,ID ,COMPID, TRANSNO,TRANSSL,ENTRYTP,DDMMTP,DDMMQTY FROM RX_PRESCRIBE WHERE COMPID = '{0}' AND ENTRYTP = 'MANUAL' AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '4TH'
+) A  LEFT OUTER JOIN RX_GHEAD ON RX_GHEAD.GHEADID = A.DOSEID order by ID ASC",
+               companyId, MemoNo);
+                                System.Data.SqlClient.SqlCommand cmd4 = new System.Data.SqlClient.SqlCommand(query4, conn4);
+                                conn4.Open();
+                                SqlDataAdapter da4 = new SqlDataAdapter(cmd4);
+                                DataTable ds4 = new DataTable();
+                                da4.Fill(ds4);
+
+                                foreach (DataRow row in ds4.Rows)
+                                {
+                                    <tr>
+                                        <td><h3 style="color: black;padding-left:4px; font-weight: bold">Rx -</h3></td>
+                                    </tr>
+                                    @*<tr style="outline: thin solid;">
+                                            <td align="center">Medicine</td>
+                                            <td align="center" style="border-left: 1px solid Black;">Dose</td>
+                                            <td align="center" style="border-left: 1px solid Black;">Time</td>
+                                            <td align="center" style="border-left: 1px solid Black;">Qty</td>
+                                        </tr>*@
+                                    break;
+                                }
+
+                                string MedicineName = "", DoseName = "", Time = "", Qty = "";
+                                foreach (DataRow row in ds4.Rows)
+                                {
+                                    MedicineName = row["RES4TH"].ToString();
+                                    DoseName = row["DoseName"].ToString();
+                                    Time = row["DDMMTP"].ToString();
+                                    Qty = row["DDMMQTY"].ToString();
+
+                                    string InBanglaCharacter = "";
+                                    InBanglaCharacter = NumberConversionEngToBangla.number(Qty);
+
+                                    if (Time == "DAY")
+                                    {
+                                        Time = "দিন";
+                                    }
+                                    else if (Time == "MONTH")
+                                    {
+                                        Time = "মাস";
+                                    }
+                                    <tr>
+                                        <td><p style="color: black;padding-left:30px;">@MedicineName-@DoseName-@InBanglaCharacter-@Time</p></td>
+                                    </tr>
+
+                                }
+                            }
+
+                            <tr>
+                                <td><br /></td>
+                            </tr>
+                            @{
+                                //Get Advice (5th part)
+                                System.Data.SqlClient.SqlConnection conn5 = new System.Data.SqlClient.SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["AslPrescriptionApiDbContext"].ToString());
+                                string query5 = string.Format(
+                                    @" SELECT RES5TH, ID ,COMPID, TRANSNO,TRANSSL,ENTRYTP FROM( 
+                    SELECT (CASE WHEN SHOWTP = 'EN' THEN GHEADEN ELSE GHEADBG END) RES5TH,RX_PRESCRIBE.ID, RX_PRESCRIBE.COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE INNER JOIN RX_GHEAD ON RX_PRESCRIBE.GHEADID = RX_GHEAD.GHEADID 
+                    WHERE RX_PRESCRIBE.COMPID = '{0}' AND RX_PRESCRIBE.COMPID = RX_GHEAD.COMPID AND ENTRYTP = 'RECORD' 
+                    AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '5TH' 
+                    UNION 
+                    SELECT RESULT RES5TH ,ID ,COMPID, TRANSNO, TRANSSL, ENTRYTP FROM RX_PRESCRIBE 
+                    WHERE COMPID ='{0}'AND ENTRYTP = 'MANUAL' AND RX_PRESCRIBE.TRANSNO = '{1}' AND PARTSL = '5TH' 
+                    ) A order by ID ASC ",
+                                    companyId, MemoNo);
+                                System.Data.SqlClient.SqlCommand cmd5 = new System.Data.SqlClient.SqlCommand(query5, conn5);
+                                conn5.Open();
+                                SqlDataAdapter da5 = new SqlDataAdapter(cmd5);
+                                DataTable ds5 = new DataTable();
+                                da5.Fill(ds5);
+
+
+                                foreach (DataRow row in ds5.Rows)
+                                {
+                                    <tr>
+                                        <td><h4 style="color: black;padding-left:4px; font-weight: bold">Advice :</h4></td>
+                                    </tr>
+                                    break;
+                                }
+
+                                string advice = "";
+                                foreach (DataRow row in ds5.Rows)
+                                {
+                                    advice = row["RES5TH"].ToString();
+                                    <tr>
+                                        <td><p style="color: black;padding-left:30px;">@advice</p></td>
+                                    </tr>
+
+                                }
+                            }
+
+
+
+
+                            <tr>
+                                <td><br /></td>
+                            </tr>
+                            @{
+                                //Get Next Date & Remarks
+                                if (nextdate != "")
+                                {
+                                    <tr>
+                                        <td>
+                                            <h4 style="color: black;padding-left:4px; font-weight: bold">Next Visit Date :</h4>
+                                            <p style="color: black;padding-left:30px;">@nextdate</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><br /></td>
+                                    </tr>
+                                }
+                                if (remarks != null)
+                                {
+                                    <tr>
+                                        <td>
+                                            <h4 style="color: black;padding-left:4px; font-weight: bold">Remarks :</h4>
+                                            <p style="color: black;padding-left:30px;">@remarks</p>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </td>
+                </tr>
+                <tr><td colspan="18"><hr style="height: 1px;color: #040404;background-color: #040404;border: none;"></td></tr>
+                <tr style="background-color: #006859; height: 98px">
+                    <td colspan="18">
+                        <table style="width: 100%">
+                            <tr>
+                                <td colspan="6" align="left" style="padding-left: 4px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FL1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL4</p>
+                                </td>
+                                <td colspan="6" align="center" style=" width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FM1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FM2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FM3</p>
+                                </td>
+                                <td colspan="6" align="right" style="padding-right: 8px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FR1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR4</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+        </table>
+    </div>
+
+</body>
+</html>

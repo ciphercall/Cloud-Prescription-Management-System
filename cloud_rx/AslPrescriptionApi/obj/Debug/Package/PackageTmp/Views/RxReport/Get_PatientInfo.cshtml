@@ -1,0 +1,200 @@
+﻿@using System.Data
+@using System.Data.SqlClient
+@using System.Data.SqlTypes
+@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.ReportModelDTO
+
+@{
+    ViewBag.Title = "Get_PatientInfo";
+    Layout = null;
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    var companyId = Convert.ToInt64(Model.COMPID);
+
+    string companyName = "", address = "", contactNo = "";
+    var re = from m in db.AslCompanyDbSet where m.COMPID == companyId select new { m.COMPNM, m.ADDRESS, m.CONTACTNO };
+    foreach (var n in re)
+    {
+        companyName = n.COMPNM;
+        address = n.ADDRESS;
+        contactNo = n.CONTACTNO;
+    }
+    var compNm = companyName;
+    var Address = address;
+    var contactno = contactNo;
+
+    DateTime fdate = Convert.ToDateTime(Model.Report_FromDate);
+    string ddt = fdate.ToString("dd-MMM-yyyy");
+    var fromdate = ddt;
+
+    DateTime tDate = Convert.ToDateTime(Model.Report_ToDate);
+    string tdd = tDate.ToString("dd-MMM-yyyy");
+    var todate = tdd;
+
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+}
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link href="~/Content/reportcss/style.css" rel="stylesheet" />
+
+</head>
+
+
+
+<body style=" background-color:#fafafa;">
+    @*<input id="print" tabindex="1" type="button" value="Print" onclick="ClosePrint()" />*@
+    <div style="width: 960px; margin: 0px auto; border: 1px solid #d3d3d3; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); background: none repeat scroll 0 0 white;">
+        <table id="mainTable" border="0" width="100%">
+            <thead>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #00689b">
+                    <td colspan="12">
+                        <h3 style="color: white;padding:4px">@compNm</h3>
+                        <p style="color:white;padding-left:4px">@Address<br />  @contactno</p>
+                    </td>
+
+                    <td colspan="6" style="color: white;padding:8px" align="right">
+                        Powered By<br />Alchemy Software
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="12" align="left" style="padding: 4px; font-weight: bold">Date Wise Patient Information</td>
+                    <td align="right" colspan="6" style="padding:8px">Print:@currentDateTime.ToString("dd-MM-yy hh:mm tt")</td>
+                </tr>
+                <tr style="outline: thin solid">
+                    <td colspan="9" style="padding:4px;font-weight:bold">From Date : <span style="font-weight: bold">@fromdate</span></td>
+                    <td colspan="9" style="font-weight: bold"> To Date : <span style="font-weight:bold">@todate</span></td>
+                </tr>
+
+                <tr style="background-color: #00689b; outline: thin solid">
+                    <td colspan="2" style="color: white; padding: 4px" align="center">Date</td>
+                    <td colspan="2" style="color: white; padding: 4px" align="center">ID</td>
+                    <td colspan="5" style="color: white; padding: 4px" align="center">Name</td>
+                    <td colspan="1" style="color: white; padding: 4px" align="center">Age</td>
+                    <td colspan="2" style="color: white; padding: 4px" align="center">Gender</td>
+                    <td colspan="2" style="color: white; padding: 4px" align="center">Mobile No</td>
+                    <td colspan="4" style="color: white; padding: 4px" align="center">Refer Name</td>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    string Date="",name = "", age = "", Gender = "", mobileNo1 = "", Paddress = "", refername = "", remarks = "";
+                    Int64 referid = 0,PatientID=0;
+                    
+                    
+                    string x1 = fdate.ToString("dd-MMM-yyyy");
+                    DateTime From_Date = DateTime.Parse(x1);
+                    string x2 = tDate.ToString("dd-MMM-yyyy");
+                    DateTime To_Date = DateTime.Parse(x2);
+
+                    var getPatientInfo = (from m in db.RxPatientDbSet where m.COMPID == companyId && m.TRANSDT >= From_Date && m.TRANSDT <= To_Date select m).ToList();
+
+                    foreach (var x in getPatientInfo)
+                    {
+                        string getdate = Convert.ToString(x.TRANSDT);
+                        DateTime MyDateTime = DateTime.Parse(getdate);
+                        Date = MyDateTime.ToString("dd-MMM-yyyy");
+                        
+                        PatientID = Convert.ToInt64(x.RXPIDM);
+                        name = x.RXPNM;
+                        age = Convert.ToString(x.AGE);
+                        Gender = Convert.ToString(x.GENDER);
+                        if (Gender == "M")
+                        {
+                            Gender = "MALE";
+                        }
+                        else if (Gender == "F")
+                        {
+                            Gender = "FEMALE";
+                        }
+
+                        mobileNo1 = x.MOBNO1;
+                        referid = Convert.ToInt64(x.REFERID);
+
+                        var getRefername = (from m in db.RxReferDbSet where companyId == m.COMPID && m.REFERID == referid select new { m.REFERNM }).ToList();
+                        foreach (var y in getRefername)
+                        {
+                            refername = y.REFERNM;
+                        }
+
+                        <tr style="outline:thin solid">
+                            <td align="left" colspan="2">
+                                @Date
+                            </td>
+                            <td align="left" colspan="2">
+                                @PatientID
+                            </td>
+                            <td align="left" colspan="5">
+                                @name
+                            </td>
+                            <td align="center" colspan="1">
+                                @age
+                            </td>
+                            <td align="center" colspan="2">
+                                @Gender
+                            </td>
+                            <td align="Left" colspan="2">
+                                @mobileNo1
+                            </td>
+                            <td align="left" colspan="4">
+                                @refername
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

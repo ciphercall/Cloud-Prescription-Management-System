@@ -1,0 +1,191 @@
+﻿@using System.Data
+@using System.Data.SqlClient
+@using AslPrescriptionApi.Models
+@{
+    ViewBag.Title = "Index";
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    Int64 companyID = Convert.ToInt64(HttpContext.Current.Session["loggedCompID"].ToString());
+
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+}
+
+<div id="contentHeaderBox">
+    <h1>DASHBOARD</h1>
+</div>
+<br />
+
+<div class="col-md-12">
+    <div class="panel panel-primary">
+        <div class="panel-heading">Patient Information</div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        PatientID
+                    </th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Gender
+                    </th>
+                    <th>
+                        Age
+                    </th>
+                    <th>
+                        Mobile NO
+                    </th>
+                    <th>
+                        Registration Date
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                    <th>
+                        In Time
+                    </th>
+                    <th></th>
+                </tr>
+
+
+                @{
+                    string date = currentDateTime.ToString("dd-MMM-yyyy");
+                    DateTime today = DateTime.Parse(date);
+
+                    var getTodayPatientInfo = (from prescMst in db.RxPrescMstDbSet
+                                               join patient in db.RxPatientDbSet on prescMst.COMPID equals patient.COMPID
+                                               where prescMst.COMPID == companyID && prescMst.TRANSDT == today
+                                               && prescMst.RXPID == patient.RXPID
+                                               select new
+                                               {
+                                                   patient.RXPID,
+                                                   patient.RXPIDM,
+                                                   patient.RXPNM,
+                                                   patient.AGE,
+                                                   patient.MOBNO1,
+                                                   patient.GENDER,
+                                                   registrationDate = patient.TRANSDT,
+
+                                                   prescMst.ID,
+                                                   prescMst.COMPID,
+                                                   prescMst.RXPTP,
+                                                   prescMst.INSTIME,
+                                                   prescribe_Date = prescMst.TRANSDT,
+                                                   memoNo = prescMst.TRANSNO,
+                                                   prescMst.NXTDT,
+                                                   prescMst.REMARKS,
+
+                                               }).OrderByDescending(x => x.INSTIME).ToList();
+
+                    string patientName = "", Gender = "", Age = "", Mobile = "", patientDate = "", status = "", inTime = "", prescribe_Date = "", nextDate = "";
+                    DateTime Date1, time, Date2, Date3;
+                    Int64 compid = 0, PatientID = 0, patientIDM = 0;
+                    foreach (var x in getTodayPatientInfo)
+                    {
+                        compid = x.COMPID;
+                        PatientID = x.RXPID;
+                        patientIDM = x.RXPIDM;
+                        patientName = x.RXPNM;
+                        Gender = x.GENDER;
+                        Age = Convert.ToString(x.AGE);
+                        Mobile = x.MOBNO1;
+
+                        Date1 = Convert.ToDateTime(x.registrationDate);
+                        patientDate = Date1.ToString("dd-MMM-yyyy");
+
+                        status = x.RXPTP;
+
+                        time = Convert.ToDateTime(x.INSTIME);
+                        inTime = time.ToString("hh:mm tt");
+
+
+                        <tr>
+                            <td>
+                                @patientIDM
+                            </td>
+                            <td>
+                                @patientName
+                            </td>
+                            <td>
+                                @Gender
+                            </td>
+                            <td>
+                                @Age
+                            </td>
+                            <td>
+                                @Mobile
+                            </td>
+                            <td>
+                                @patientDate
+                            </td>
+                            <td>
+                                @status
+                            </td>
+                            <td>
+                                @inTime
+                            </td>
+                            <td>
+                                <span>
+                                    @{
+                        Date2 = Convert.ToDateTime(x.prescribe_Date);
+                        prescribe_Date = Date2.ToString("dd-MMM-yyyy");
+
+                        if (x.NXTDT != null)
+                        {
+                            Date3 = Convert.ToDateTime(x.NXTDT);
+                            nextDate = Date3.ToString("dd-MMM-yyyy");
+                        }
+
+                                    }
+                                    <a href="@Url.Action("IndexPost", new
+                                             {
+                                                 cid = compid,
+                                                 patientID = PatientID,
+                                                 patient_idm = patientIDM,
+                                                 patientName= x.RXPNM,
+                                                 patientType = x.RXPTP,
+                                                 prescribeDate = prescribe_Date,
+                                                 prescribeMemoNo = x.memoNo,
+                                                 NextDate = nextDate,
+                                                 remarks = x.REMARKS,
+                                             })"
+                                       class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fa fa-pencil-square-o"></i>
+                                    </a>
+                                </span>
+                            </td>
+                        </tr>
+
+                    }
+
+                }
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+

@@ -1,0 +1,192 @@
+﻿@using System.Data
+@using System.Data.SqlClient
+@using System.Data.SqlTypes
+@using AslPrescriptionApi.Models
+@using AslPrescriptionApi.Models.ASRX
+@model AslPrescriptionApi.Models.DTO.ReportModelDTO
+
+@{
+    ViewBag.Title = "Get_GeneralHeadInfo";
+    Layout = null;
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    Int64 companyID = Convert.ToInt64(HttpContext.Current.Session["loggedCompID"].ToString());
+    Int64 loggedUserID = Convert.ToInt64(HttpContext.Current.Session["loggedUserID"].ToString());
+
+
+    var permission_Check = from m in db.AslRoleDbSet
+                           where m.COMPID == companyID && m.USERID == loggedUserID
+                               && m.CONTROLLERNAME == "RxReport" && m.ACTIONNAME == "Get_GeneralHeadInfo"
+                           select m;
+    var Status = "";
+    foreach (var check in permission_Check)
+    {
+        Status = check.STATUS;
+    }
+
+    if (Status == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+
+    string companyName = "", address = "", contactNo = "";
+    var re = from m in db.AslCompanyDbSet where m.COMPID == companyID select new { m.COMPNM, m.ADDRESS, m.CONTACTNO };
+    foreach (var n in re)
+    {
+        companyName = n.COMPNM;
+        address = n.ADDRESS;
+        contactNo = n.CONTACTNO;
+    }
+    var compNm = companyName;
+    var Address = address;
+    var contactno = contactNo;
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link href="~/Content/reportcss/style.css" rel="stylesheet" />
+
+</head>
+
+
+
+<body style=" background-color:#fafafa;">
+    @*<input id="print" tabindex="1" type="button" value="Print" onclick="ClosePrint()" />*@
+    <div style="width: 960px; margin: 0px auto; border: 1px solid #d3d3d3; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); background: none repeat scroll 0 0 white;">
+        <table id="mainTable" border="0" width="100%">
+            <thead>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #00689b">
+                    <td colspan="12">
+                        <h3 style="color: white;padding:4px">@compNm</h3>
+                        <p style="color:white;padding-left:4px">@Address<br />  @contactno</p>
+                    </td>
+
+                    <td colspan="6" style="color: white;padding:8px" align="right">
+                        Powered By<br />Alchemy Software
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="12" align="left" style="padding: 4px; font-weight: bold">General Head Information</td>
+                    <td align="right" colspan="6" style="padding:8px">Print:@currentDateTime.ToString("dd-MM-yy hh:mm tt")</td>
+                </tr>
+                <tr>
+                    <td colspan="18"><hr style="height: 1px;color: #040404;background-color: #040404;border: none;"></td>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+
+                    Int64 minCategoryId = Convert.ToInt64((from n in db.RxGheadMstDbSet where companyID == n.COMPID select n.GCATID).Min());
+                    Int64 maxCategoryId = Convert.ToInt64((from n in db.RxGheadMstDbSet where companyID == n.COMPID select n.GCATID).Max());
+
+                    for (Int64 i = minCategoryId; i <= maxCategoryId; i++)
+                    {
+                        string categoryName = "";
+                        Int64 categoryId = 0;
+                        var CategoryInfo = from n in db.RxGheadMstDbSet
+                                           where n.COMPID == companyID && n.GCATID == i
+                                           select new { n.GCATNM, n.GCATID };
+
+                        foreach (var n in CategoryInfo)
+                        {
+                            categoryName = n.GCATNM;
+                            categoryId = Convert.ToInt64(n.GCATID);
+                        }
+                        var categoryNM = categoryName;
+
+                        List<Ghead> gheads = new List<Ghead>();
+                        gheads = db.RxGheadDbSet.Where(e => e.COMPID == companyID && e.GCATID == i).ToList();
+
+                        if (gheads.Count != 0)
+                        {
+                            <tr>
+                                <td><br /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="18" align="left" style="padding: 4px; font-weight: bold">@categoryNM</td>
+                            </tr>
+
+                            <tr style="background-color: white;">
+                                <td colspan="1"></td>
+                                <td colspan="8" style="color: Black; padding: 4px">Particulars (English)</td>
+                                <td colspan="9" style="color: Black; padding: 4px">Particulars (Bengali)</td>
+                            </tr>
+                            <tr>
+                                <td colspan="1"></td>
+                                <td colspan="17"><hr style="height: 1px;color: #040404;background-color: #040404;border: none;"></td>
+                            </tr>
+                            foreach (var item in gheads)
+                            {
+                                <tr>
+                                    <td colspan="1">
+                                    </td>
+                                    <td colspan="8" style="padding:4px">
+                                        @Html.DisplayFor(modelItem => item.GHEADEN)
+                                    </td>
+                                    <td colspan="9" style="padding:4px">
+                                        @Html.DisplayFor(modelItem => item.GHEADBG)
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

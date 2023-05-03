@@ -1,0 +1,338 @@
+﻿@using AslPrescriptionApi.DataAccess
+@model AslPrescriptionApi.Models.ASL.LoginModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alchemy Software | Cloud Rx</title>
+    <!-- stylesheets -->
+    <link href="~/Content/homeDesign/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/homeDesign/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/homeDesign/css/animate.css" rel="stylesheet" />
+    <link href="~/Content/homeDesign/owl-carousel/owl.carousel.css" rel="stylesheet" />
+    <link href="~/Content/homeDesign/owl-carousel/owl.theme.css" rel="stylesheet" />
+    <link href="~/Content/homeDesign/css/style.css" rel="stylesheet" />
+    <link href="~/Content/HomeDesign/css/loginScreen.css" rel="stylesheet" />
+    <!-- end stylesheets -->
+    <!-- js libray -->
+    <script src="~/Content/homeDesign/js/jquery-2.1.3.js"></script>
+</head>
+<body>
+    <!--header start-->
+    <header>
+        <section id="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-2" id="logo">
+                            <!-- <a href="index.php"><img src="images/logo.png" alt="rs" /></a> -->
+                            <a href="../Home/" style="text-decoration: none;"><h1>Cloud Rx</h1></a>
+                        </div>
+                        <!--left menu-->
+                        <div class="col-md-6 col-xs-12 animated fadeIn" id="leftMenu">
+                            <ul>
+                                <li class="active"><a href="../Home/">Home</a></li>
+                                <li>@Html.ActionLink("About", "About", "Home")</li>
+                                <li>@Html.ActionLink("Faq", "Faq", "Home")</li>
+                                <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                                <!--<li> <a href="#" style="padding: 13px;"><img src="images/facebook.png" alt="facebook"></a></li>-->
+
+                            </ul>
+                        </div>
+                        <!--end left menu-->
+                        <!--menu right-->
+                        <div class="col-md-4 col-xs-10 pull-right text-left" id="rightMenu">
+                            <ul>
+
+                                <li><a href="#" id="login" class=""> Login</a></li>
+                                <li>
+                                    <a href="https://www.facebook.com/AlchemySoftware" target="_blank"> <i class="fa fa-facebook"></i></a>
+                                    <a href="https://twitter.com/alchemybd" target="_blank"> <i class="fa fa-twitter"></i></a>
+                                    <a href="https://plus.google.com/100639053145643474788" target="_blank"> <i class="fa fa-google-plus"></i></a>
+                                </li>
+                                <!-- <li>
+                                    <a href="#" class=""> <i class="fa fa-facebook"></i></a>
+                                    <a href="#" class=""> <i class="fa fa-twitter"></i></a>
+                                    <a href="#" class=""> <i class="fa fa-google-plus"></i></a>
+                                </li> -->
+                                <!-- <li><a href="contact.php" class="">Request for DEMO : +88 01988 844 987</a></li> -->
+                            </ul>
+                        </div>
+                        <!--end menu right-->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </header>
+    <!--header end-->
+    <!--main slider start-->
+    <section id="slider">
+        <div class="row" id="owl-rs">
+            <img class="wow fadeIn" src="~/Content/HomeDesign/images/slider/slider3.jpg" alt="" />
+        </div>
+        <!--welcome message section-->
+        <div id="welcomeMsg" class="wow slideInLeft">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-5">
+                        <h2>Welcome to Cloud Rx</h2>
+                        <p>"Prescription Management System"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--end welcome message section-->
+        <div id="iconBox">
+            <a href="../Home/About" id="features"><p class="wow slideInUp" data-toggle="popover" title="Facilities" data-placement="bottom" data-content="Lorem ipsum dolor sit amet, consectetur adipisicing elit."><i class="fa fa-ge fa-4x"></i></p></a>
+            <a href="../Home/About" id="benifits"><p class="wow slideInUp" data-toggle="popover" title="Benefits" data-placement="bottom" data-content="Lorem ipsum dolor sit amet, consectetur adipisicing elit."><i class="fa fa-diamond fa-4x"></i></p></a>
+            <a href="../Home/Contact"><p class="wow slideInUp" data-toggle="popover" title="Support" data-placement="bottom" data-content="Lorem ipsum dolor sit amet, consectetur adipisicing elit."><i class="fa fa-support fa-4x"></i></p></a>
+        </div>
+        <!-- welcome footer -->
+        <div class="row">
+            <div class="col-md-12 wow slideInLeft" id="welcomeBottom">
+                <h4><a href="../Home/Contact" class="">Request for DEMO</a></h4>
+                <h3><i class="fa fa-phone fa 2x"></i> +88 01988 844 987 </h3>
+            </div>
+        </div>
+        <!-- end welcome footer -->
+
+    </section>
+    <!--end main slider-->
+    <!-- clients section -->
+    <section id="clientsSlider">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-12" id="owl-clients">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- end clients section -->
+    <!--Top footer section-->
+    <section id="topFooter">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-3 wow slideInUp">
+                        <h3>
+                            About Us
+                        </h3>
+                        <p>
+                            Alchemy Software is a growing IT service provider of high-end business solutions to clients across the globe. Over the years, the company extended the range of its
+                            services in various industries. Alchemy Software devoted its full effort on customer satisfaction by providing standard software solutions.
+                        </p>
+                        <a href="http://alchemy-bd.com" class="">
+                            Read More
+                        </a>
+                    </div>
+                    <div class="col-md-3 wow slideInUp">
+                        <h3>
+                            PRODUCTS IN CLOUD
+                        </h3>
+                        <ul>
+                            <li>
+                                <a href="http://travel.alchemy-bd.com" target="_blank">
+                                    Travel Agent Management
+                                </a>
+                            </li>
+                            <li>
+                                <a href="http://cnf.alchemy-bd.com" target="_blank">
+                                    C&F Agent Management
+                                </a>
+                            </li>
+                            <li>
+                                <a href="http://pos.alchemy-bd.com" target="_blank">
+                                    Inventory Management
+                                </a>
+                            </li>
+                            <li>
+                                <a href="http://accounts.alchemy-bd.com" target="_blank">
+                                    General Accounts
+                                </a>
+                            </li>
+                            <li>
+                                <a href="http://therapy.alchemy-bd.com" target="_blank">
+                                    Therapy Management
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3 wow slideInUp">
+                        <h3>
+                            SERVICES WE PROVIDE
+                        </h3>
+                        Ready Software Packages<br />
+                        ERP Software Development<br />
+                        Web Application Development<br />
+                        Mobile Application Development<br />
+                        E-commerce Site Development<br />
+                        Website Development<br />
+                        SMS Integrated Application<br />
+                        Customized Software<br />
+                        API Integration<br />
+                        SEO (Search Engine Optimization)<br />
+                        Security & Surveillance System
+                    </div>
+                    <div class="col-md-3 wow slideInUp">
+                        <h3>
+                            We are for our clients
+                        </h3>
+                        <a href="http://client.alchemy-bd.com" target="_blank" class="btn btn-primary clientLoginBtn btn-xs">
+                            <i class="fa fa-user">
+                            </i>Login
+                        </a>
+                        <span style="font-size: 11px;padding-left: 2px;position: relative;top: 4px;">
+                            200+ clients use this.
+                        </span>
+                        <h3>
+                            We are in Facebook
+                        </h3>
+                        <iframe src="http://www.facebook.com/plugins/like.php?href=http://www.facebook.com/AlchemySoftware"
+                                scrolling="no" frameborder="0" style="border:none; width:240px;height:auto"></iframe>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+    </section>
+    <!--end top footer-->
+    <!--footer part-->
+    <footer>
+        <section id="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>Developed By : <a href="http://www.alchemy-bd.com" target="_blank">Alchemy Software</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </footer>
+
+    <!--end footer part-->
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true)
+
+            <!-- login screen -->
+        <div id="loginScreen">
+            <div id="loginHeader">
+                <div id="loginClose">
+                    <a href="#" style="text-decoration:none" id="closeForm"><p>&times;</p></a>
+                </div>
+                <h2>Alchemy Software</h2>
+                <p>Artificier For Animating Your Aspiration</p>
+            </div>
+            @if (ViewData["ErrorMessage"] != null)
+            {
+                <br />
+                <br />
+                <br />
+                <div class="row">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <div class="alert alert-danger text-center" role="alert" style="color: #FFFFFF;background-color: #CB5454;  border-color: #CB5454;padding: 10px 20px 10px 50px;">
+                            <button type="button" class="close" data-dismiss="alert" style="padding: 7px 10px; background: #FFFFFF; border: 1px; border-radius: 40px;">&times;</button>
+                            <h5>Warning!  @ViewData["ErrorMessage"]<i style="color: #ffffff" class="fa fa-question-circle fa-1x"></i></h5>
+                        </div>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+            }
+            <div id="navigation">
+                <a href="#" style="text-decoration:none" id="btnLoginBody">LOGIN</a>
+            </div>
+            <!-- login body -->
+
+            <div id="loginBody" class="mainBody">
+                <p class="Arrow"><i class="fa fa-caret-up fa-2x"></i></p>
+                <form action="#">
+                    @Html.TextBoxFor(m => m.LOGINID, htmlAttributes: new { @class = "form-control", placeholder = "Login ID" })
+                    @Html.ValidationMessageFor(model => model.LOGINID, "", new { @class = "text-danger", style = "float: left" })
+
+                    @Html.PasswordFor(m => m.LOGINPW, htmlAttributes: new { @class = "form-control", placeholder = "Password" })
+                    @Html.ValidationMessageFor(model => model.LOGINPW, "", new { @class = "text-danger", style = "float: left" })
+
+                    @Html.TextBoxFor(model => model.LOGLTUDE, new { id = "latlon", style = "display: none;" })
+                    <input id="lat" type="hidden" />
+                    <input id="lon" type="hidden" />
+
+                    <button type="submit" class="btn btn-primary" style="color: white; background-color: #286090;">Login</button>
+                    @*<input type="text" class="form-control" placeholder="Email">
+                        <input type="text" class="form-control" placeholder="Password">
+                        <br />
+                        <button type="submit" class="btn btn-primary">Login</button>*@
+                </form>
+                <br />
+                <p><a href="#" id="btnForgotPass">Forgot my password</a></p>
+            </div>
+            <!-- end login body -->
+            <!-- reset password body -->
+            <div id="passwordResetBody" class="mainBody">
+                <h4 align="left">Reset your password</h4>
+                <p align="left">
+                    Enter your email address below. We'll look for your account and send you a password
+                    reset email
+                </p>
+                <br />
+                <form action="#">
+                    <input type="text" class="form-control" placeholder="Email">
+                    <br />
+                    <button type="submit" class="btn btn-primary" style="color: white; background-color: #286090;">Send Password Reset</button>
+                </form>
+                <br />
+
+            </div>
+            <!-- end reset password -->
+        </div>
+
+
+        //Latitute & longitude
+        <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+        <script language="javascript" type="text/javascript">
+            $(function () {
+                navigator.geolocation.getCurrentPosition(showPosition);
+                //navigator.geolocation.getCurrentPosition(showPosition, positionError);
+
+                function showPosition(position) {
+                    var coordinates = position.coords;
+                    $("#lat").val(coordinates.latitude);
+                    $("#lon").val(coordinates.longitude);
+
+                    $("#latlon").val(
+                        $("#lat").val() + "," + $("#lon").val()
+                    );
+                }
+            });
+
+        </script>
+    }
+    <!-- end login screen -->
+
+
+    <script src="~/Content/jquery-2.1.4/jquery-2.1.4.min.js"></script>
+    <script src="~/Content/HomeDesign/js/loginScreen.js"></script>
+    
+    <!--end footer part-->
+    <a href="#" id="backToTop"><i data-toggle="tooltip" data-placement="top" title="Go to top" class="fa  fa-chevron-circle-up fa-2x"></i></a>
+    <!-- other scripts -->
+    <script src="~/Content/homeDesign/js/bootstrap.min.js"></script>
+    <script src="~/Content/homeDesign/owl-carousel/owl.carousel.js"></script>
+    <script src="~/Content/homeDesign/js/jquery.cookie.js"></script>
+    <script src="~/Content/homeDesign/js/wow.min.js"></script>
+    <script src="~/Content/homeDesign/js/functions.js"></script>
+    <!-- end other scripts -->    
+</body>
+</html>

@@ -1,0 +1,1192 @@
+﻿@using AslPrescriptionApi.Models
+@using AslPrescriptionApi.Models.DTO
+@model AslPrescriptionApi.Models.DTO.PrescMst_PrescribeDTO
+
+
+@{
+    ViewBag.Title = "Index";
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    Int64 LoggedCompId = Convert.ToInt64(System.Web.HttpContext.Current.Session["loggedCompID"]);
+    Int64 loggedUserID = Convert.ToInt64(System.Web.HttpContext.Current.Session["loggedUserID"]);
+
+    var query = from m in db.AslRoleDbSet
+                where m.COMPID == LoggedCompId && m.USERID == loggedUserID && m.CONTROLLERNAME == "Prescribe"
+                select new { m.STATUS, m.INSERTR, m.UPDATER, m.DELETER };
+    string status = "", insert = "", update = "", delete = "", update_LogData = "";
+    foreach (var S in query)
+    {
+        status = S.STATUS;
+        insert = S.INSERTR;
+        update = S.UPDATER;
+        delete = S.DELETER;
+    }
+
+    if (status == "I")
+    {
+        Response.Redirect("~/GraphView/Index");
+    }
+
+
+
+    List<SelectListItem> ListofPrescriptionType = new List<SelectListItem>();
+    ListofPrescriptionType.Add(new SelectListItem { Text = "NEW", Value = "NEW" });
+    ListofPrescriptionType.Add(new SelectListItem { Text = "OLD", Value = "OLD" });
+
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+
+
+    string transNO = "";
+    string date = currentDateTime.ToString("dd");
+    string month = currentDateTime.ToString("MM");
+    string years = currentDateTime.ToString("yy");
+    Int64 MAXIMUM = 1000;
+
+
+    string x1 = currentDateTime.ToString("dd-MMM-yyyy");
+    DateTime currentDate = DateTime.Parse(x1);
+    var count_trnsNO = (from m in db.RxPrescMstDbSet where m.COMPID == LoggedCompId && m.TRANSDT == currentDate select m).ToList();
+    if (count_trnsNO.Count == 0)
+    {
+        transNO = Convert.ToString(date + month + years + "001");
+    }
+    else
+    {
+        var find_TransNo = db.RxPrescMstDbSet.Where(x => x.COMPID == LoggedCompId && x.TRANSDT == currentDate)
+                        .Max(s => s.TRANSNO);
+        string findTransNO = Convert.ToString(find_TransNo);
+
+        Int64 convertTransNO = Convert.ToInt64(findTransNO.Substring(6, 3));
+        Int64 transNO_increment = convertTransNO + 1;
+        if (transNO_increment < 10)
+        {
+            transNO = Convert.ToString(findTransNO.Substring(0, 6) + "00" + transNO_increment.ToString());
+        }
+        else if ((10 <= transNO_increment) && (transNO_increment <= 99))
+        {
+            transNO = Convert.ToString(findTransNO.Substring(0, 6) + "0" + transNO_increment.ToString());
+        }
+        else if (transNO_increment < MAXIMUM)
+        {
+            transNO = Convert.ToString(findTransNO.Substring(0, 6) + transNO_increment.ToString());
+        }
+
+    }
+
+
+    string patientID = "", patientIDM = "", patientNAME = "", pType = "", ShowSubmitButton = "";
+    if (TempData["PatientCreationMessage"] != null) // Data get from patient creation page
+    {
+        PatientDTO patientDTO_Model = new PatientDTO();
+        patientDTO_Model = (PatientDTO)TempData["PatientCreationMessage"];
+        patientID = Convert.ToString(patientDTO_Model.RXPID);
+        patientIDM = Convert.ToString(patientDTO_Model.RXPIDM);
+        patientNAME = Convert.ToString(patientDTO_Model.RXPNM);
+        pType = "NEW";
+        ShowSubmitButton = "True";
+    }
+}
+
+
+
+<link href="~/Content/Angular-File/ng-grid.css" rel="stylesheet" />
+
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    @Html.HiddenFor(model => model.COMPID, new { id = "txtcompid", @Value = LoggedCompId })
+    @Html.HiddenFor(model => model.INSUSERID, new { id = "txtInsertUserid", style = "width:4em;", @Value = loggedUserID })
+    @Html.HiddenFor(model => model.Insert, new { id = "txt_Insertid", style = "width:3em;", @Value = insert })
+    @Html.HiddenFor(model => model.Update, new { id = "txt_Updateid", style = "width:3em;", @Value = update })
+    @Html.HiddenFor(model => model.Delete, new { id = "txt_Deleteid", style = "width:3em;", @Value = delete })
+    @Html.HiddenFor(model => model.UpdateLogData, new { id = "txt_Update_LogData", style = "width:3em;", @Value = update_LogData })
+
+
+    if (ShowSubmitButton == "True")// Data get from patient creation page
+    {
+        @Html.HiddenFor(model => model.ShowSubmitButton, new { id = "txt_ShowSubmitButton", style = "width:3em;", @Value = ShowSubmitButton })
+    }
+
+    if (patientID != "")// Data get from patient creation page
+    {
+        @Html.HiddenFor(model => model.RXPID, new { id = "Hiddentxt_RxPID", @Value = patientID })
+    }
+    else
+    {
+        @Html.HiddenFor(model => model.RXPID, new { id = "Hiddentxt_RxPID" })
+    }
+
+
+
+
+    <div id="contentHeaderBox">
+        <h1 style="padding-left:16px">Prescription Form (Create)</h1>
+        <div class="btn-group pull-right" id="editOption">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
+                <i class="fa fa-cog"></i>
+            </button>
+            <ul class="dropdown-menu pull-right" style="" role="menu">
+                <li>
+                    <a href="@Url.Action("Update", "Prescribe")"><i class="fa fa-file-text"></i> Update</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <br>
+
+    <div class="col-md-12">
+        <div class="form-group">
+            <div ng-app="PrescribeApp" data-ng-controller="ApiPrescribeController">
+
+                <div class="row">
+                    <div class="col-md-2">
+                        <span> <b>  Date</b></span>
+                        @Html.TextBoxFor(model => model.TRANSDT, htmlAttributes: new { id = "txt_TransDate", @class = "form-control input-sm", @Value = currentDateTime.ToString("dd-MMM-yyyy"), @readonly = "readonly", tabindex = "-1" })
+                    </div>
+                    <div class="col-md-2">
+                        <span> <b>  MemoNO</b></span>
+                        @Html.TextBoxFor(model => model.TRANSNO, htmlAttributes: new { id = "txt_TransNo", @class = "form-control input-sm", @readonly = "readonly", @Value = transNO, tabindex = "-1" })
+                    </div>
+                    <div class="col-md-2">
+                        <span> <b>  Type</b></span>
+                        @if (pType != "")// Data get from patient creation page
+                        {
+                            @Html.TextBoxFor(model => model.RXPTP, htmlAttributes: new { id = "txt_RxpType", @Value = pType, @class = "form-control input-sm", @readonly = "readonly", tabindex = "-1" })
+                        }
+                        else
+                        {
+                            @Html.DropDownListFor(model => model.RXPTP, ListofPrescriptionType, htmlAttributes: new { id = "txt_RxpType", @class = "form-control input-sm", autofocus = true })
+                        }
+                    </div>
+                    <div class="col-md-2">
+                        <span> <b>  Patient ID</b></span>
+                        @if (patientIDM != "")// Data get from patient creation page
+                        {
+                            @Html.TextBoxFor(model => model.RXPIDM, htmlAttributes: new { id = "txt_RxpPIDM", @class = "form-control input-sm", @Value = patientIDM, @readonly = "readonly", tabindex = "-1" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(model => model.RXPIDM, htmlAttributes: new { id = "txt_RxpPIDM", @class = "form-control input-sm" })
+                        }
+                    </div>
+                    <div class="col-md-4">
+                        <span> <b>  Patient Name</b></span>
+                        @if (patientNAME != "")// Data get from patient creation page
+                        {
+                            @Html.TextBoxFor(model => model.RXPNM, htmlAttributes: new { id = "txt_PatientName", @class = "form-control input-sm", @Value = patientNAME, @readonly = "readonly", tabindex = "-1" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(model => model.RXPNM, htmlAttributes: new { id = "txt_PatientName", @class = "form-control input-sm", @readonly = "readonly", tabindex = "-1" })
+                        }
+                    </div>
+                </div>
+                <br />
+
+                <div class="row">
+                    <div class="col-md-2">
+                        <span> <b>  Next Date</b></span>
+                        @Html.TextBoxFor(model => model.NXTDT, htmlAttributes: new { id = "txt_NextDate", @class = "form-control input-sm" })
+                    </div>
+                    <div class="col-md-2">
+                        <span> <b>  Amount</b></span>
+                        @Html.TextBoxFor(model => model.AMOUNT, htmlAttributes: new { id = "txt_Amount", @class = "form-control input-sm", @type = "number", min = "0", max = "99999999" })
+                    </div>
+                    <div class="col-md-4">
+                        <span> <b>  Remarks</b></span>
+                        @Html.TextBoxFor(model => model.REMARKS, htmlAttributes: new { id = "txt_Remarks", @class = "form-control input-sm" })
+                    </div>
+                    <div class="col-md-2" id="submitButton_DivID">
+                        <span><br></span>
+                        <input id="submitButtonID" type="submit" value="Submit" data-ng-click="submit($event)" class="btn btn-primary btn-block input-sm" />
+                    </div>
+                    <div class="col-md-2" id="CompleteButton_DivID">
+                        <span><br></span>
+                        <input id="CompleteButtonID" type="submit" value="Complete" data-ng-click="complete($event)" class="btn btn-success btn-block input-sm" />
+                    </div>
+                    <div class="col-md-2" id="PrintButton_DivId">
+                        <span><br></span>
+                        <input type="submit" value="Print" class="btn btn-danger btn-block input-sm" formtarget="_blank" />
+                    </div>
+                </div>
+                <br />
+
+                @Html.TextBoxFor(model => model.INSLTUDE, new { id = "latlon", style = "display: none;" })
+                <input id="lat" type="hidden" />
+                <input id="lon" type="hidden" />
+
+                @{
+
+                        //1ST , 2ND
+                        List<SelectListItem> ListOfEntryType = new List<SelectListItem>();
+                        ListOfEntryType.Add(new SelectListItem { Text = "RECORD", Value = "RECORD" });
+                        ListOfEntryType.Add(new SelectListItem { Text = "MANUAL", Value = "MANUAL" });
+
+                        //1ST , 2ND, 5TH
+                        List<SelectListItem> listOfDiagnosisName = new List<SelectListItem>();
+                        Int64 gCatId_1ST = Convert.ToInt64(LoggedCompId + "02");
+                        Int64 gCatId_2ND = Convert.ToInt64(LoggedCompId + "03");
+                        Int64 gCatId_5TH = Convert.ToInt64(LoggedCompId + "04");
+
+                        List<SelectListItem> LitOfTime = new List<SelectListItem>();
+                        LitOfTime.Add(new SelectListItem { Text = "DAY", Value = "DAY" });
+                        LitOfTime.Add(new SelectListItem { Text = "MONTH", Value = "MONTH" });
+
+                }
+
+
+
+                <div class="row">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs nav-justified" role="tablist" style="background-color: #D3D3D3;">
+                        <li role="presentation" class="active"><a href="#1ST" aria-controls="home" role="tab" data-toggle="tab" style="color:black ">Diagnosis(1)</a></li>
+                        <li role="presentation"><a href="#2ND" aria-controls="profile" role="tab" data-toggle="tab" style="color:black ">Examinations(2)</a></li>
+                        <li role="presentation"><a href="#3RD" aria-controls="messages" role="tab" data-toggle="tab" style="color:black ">Investigations(3)</a></li>
+                        <li role="presentation"><a href="#4TH" aria-controls="settings" role="tab" data-toggle="tab" style="color:black ">Medicine(4)</a></li>
+                        <li role="presentation"><a href="#5TH" aria-controls="settings" role="tab" data-toggle="tab" style="color:black ">Advice(5)</a></li>
+                    </ul>
+                    <br>
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="1ST">
+                            <div class="col-md-12">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">Diagnosis Particulars</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Diagnosis</th>
+                                                <th id="Button_1st_div"></th>
+                                            </tr>
+
+                                            <tr>
+                                                @Html.HiddenFor(model => model.PARTSL, new { id = "txt_1ST_Part", @Value = Convert.ToString("1ST") })
+                                                @Html.HiddenFor(model => model.GCATID, new { id = "txt_GCtegoryid_1ST", @Value = Convert.ToString(gCatId_1ST) })
+                                                @Html.HiddenFor(model => model.GHEADID, new { id = "txt_Hidden_GHEADID_1ST" })
+                                                <td style="width: 120px;">
+                                                    @Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, htmlAttributes: new { id = "EntryTypeID_1ST", @class = "form-control input-sm" })
+                                                </td>
+                                                <td id="Diagnosis_div_1ST">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.GHEADEN1" id="DiagnosisNameID_1ST" placeholder="Diagnosis name" />
+                                                </td>
+                                                <td id="Result_div_1ST">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.RESULT" id="Resutltid_1ST" placeholder="Diagnosis name" />
+                                                </td>
+
+                                                <td id="InsertButton_1st_ShowORhide"><input id="insertButton_1st" type="submit" value="Insert" data-ng-click="addrow_1ST($event)" class="btn btn-primary" /></td>
+                                            </tr>
+
+                                            <tr data-ng-repeat="testitem in FirstPartData">
+                                                <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.COMPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSNO}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSSL}}</p></td>
+
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSDT}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.RXPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.PARTSL }}</p></td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.ENTRYTP }}</p>
+                                                    @*@Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, new { id = "gridEntryTypeID_1ST", data_ng_show = "testitem.editMode", data_ng_model = "testitem.ENTRYTP", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GheadenOrResult }}</p>
+                                                    @*@Html.DropDownListFor(model => model.GHEADID, listOfDiagnosisName, new { id = "gridDiagnosisNameID_1ST", data_ng_show = "testitem.editMode", data_ng_model = "testitem.GHEADID", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode"><a data-ng-click="deleteTestitem_1ST(testitem)" href="javascript:;">Delete</a></p>
+                                                    @*<p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit_1ST(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem_1ST(testitem)" href="javascript:;">Delete</a></p>
+                                                        <p data-ng-show="testitem.editMode"><a data-ng-click="update_1ST(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel__1ST(testitem)" href="javascript:;">Cancel</a></p>*@
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="2ND">
+                            <div class="col-md-12">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">Examinations </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>General Examinations</th>
+                                                <th>Result</th>
+                                                <th id="Button_2nd_div"></th>
+                                            </tr>
+
+                                            <tr>
+                                                @Html.HiddenFor(model => model.PARTSL, new { id = "txt_2ND_Part", @Value = Convert.ToString("2ND") })
+                                                @Html.HiddenFor(model => model.GCATID, new { id = "txt_GCtegoryid_2ND", @Value = Convert.ToString(gCatId_2ND) })
+                                                @Html.HiddenFor(model => model.GHEADID, new { id = "txt_Hidden_GHEADID_2ND" })
+                                                <td style="width: 120px;">
+                                                    @Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, htmlAttributes: new { id = "EntryTypeID_2ND", @class = "form-control input-sm" })
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.GHEADEN2" id="HeadParticular_2ND" placeholder="Particulars name" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.RESULT" id="Resutltid_2ND" placeholder="Result" />
+                                                </td>
+
+                                                <td id="InsertButton_2ND_ShowORhide"><input id="insertButton_2ND" type="submit" value="Insert" data-ng-click="addrow_2ND($event)" class="btn btn-primary" /></td>
+                                            </tr>
+
+                                            <tr data-ng-repeat="testitem in SecondPartData">
+                                                <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.COMPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSNO}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSSL}}</p></td>
+
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSDT}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.RXPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.PARTSL }}</p></td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.ENTRYTP }}</p>
+                                                    @*@Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, new { id = "gridEntryTypeID_2ND", data_ng_show = "testitem.editMode", data_ng_model = "testitem.ENTRYTP", @class = "form-control" })*@
+                                                </td>
+                                                @*<td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GheadenOrResult }}</p>
+                                                    </td>*@
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GHEADEN }}</p>
+                                                    @*@Html.DropDownListFor(model => model.GHEADID, listOfDiagnosisName, new { id = "gridDiagnosisNameID_2ND", data_ng_show = "testitem.editMode", data_ng_model = "testitem.GHEADID", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.RESULT }}</p>
+                                                    @*<input class="form-control" data-ng-show="testitem.editMode" type="text" data-ng-model="testitem.RESULT" id="gridResultID_2ND" />*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode"><a data-ng-click="deleteTestitem_2ND(testitem)" href="javascript:;">Delete</a></p>
+                                                    @*<p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit_2ND(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem_2ND(testitem)" href="javascript:;">Delete</a></p>
+                                                        <p data-ng-show="testitem.editMode"><a data-ng-click="update_2ND(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel__2ND(testitem)" href="javascript:;">Cancel</a></p>*@
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="3RD">
+                            <div class="col-md-12">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">Investigations </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Investigations (Test)</th>
+                                                <th id="Button_3rd_div"></th>
+                                            </tr>
+
+                                            <tr>
+                                                @Html.HiddenFor(model => model.PARTSL, new { id = "txt_3RD_Part", @Value = Convert.ToString("3RD") })
+                                                @Html.HiddenFor(model => model.GCATID, new { id = "txt_GCtegoryid_3RD" })
+                                                @Html.HiddenFor(model => model.GHEADID, new { id = "txt_Hidden_GHEADID_3RD" })
+                                                <td style="width: 120px;">
+                                                    @Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, htmlAttributes: new { id = "EntryTypeID_3RD", @class = "form-control input-sm" })
+                                                </td>
+                                                <td id="Investigation_div_3RD">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.GHEADEN3" id="Investigation_3RD" placeholder="Investigations name" />
+                                                </td>
+                                                <td id="Result_div_3RD">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.RESULT" id="Resutltid_3RD" placeholder="Investigations name" />
+                                                </td>
+
+                                                <td id="InsertButton_3RD_ShowORhide"><input id="insertButton_3RD" type="submit" value="Insert" data-ng-click="addrow_3RD($event)" class="btn btn-primary" /></td>
+                                            </tr>
+
+                                            <tr data-ng-repeat="testitem in ThirdPartData">
+                                                <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.COMPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSNO}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSSL}}</p></td>
+
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSDT}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.RXPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.PARTSL }}</p></td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.ENTRYTP }}</p>
+                                                    @*@Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, new { id = "gridEntryTypeID_3RD", data_ng_show = "testitem.editMode", data_ng_model = "testitem.ENTRYTP", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GheadenOrResult }}</p>
+                                                    @*@Html.DropDownListFor(model => model.GHEADID, listOfDiagnosisName, new { id = "gridDiagnosisNameID_3RD", data_ng_show = "testitem.editMode", data_ng_model = "testitem.GHEADID", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode"><a data-ng-click="deleteTestitem_3RD(testitem)" href="javascript:;">Delete</a></p>
+                                                    @*<p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit_3RD(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem_3RD(testitem)" href="javascript:;">Delete</a></p>
+                                                        <p data-ng-show="testitem.editMode"><a data-ng-click="update_3RD(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel__3RD(testitem)" href="javascript:;">Cancel</a></p>*@
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="4TH">
+                            <div class="col-md-12">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">Medicine </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Medicine</th>
+                                                <th>Dose</th>
+                                                <th>Day/Month</th>
+                                                <th>Qty</th>
+                                                <th id="Button_4th_div"></th>
+                                            </tr>
+
+                                            <tr>
+                                                @Html.HiddenFor(model => model.PARTSL, new { id = "txt_4TH_Part", @Value = Convert.ToString("4TH") })
+                                                @Html.HiddenFor(model => model.GCATID, new { id = "txt_GCtegoryid_4TH" })
+                                                @Html.HiddenFor(model => model.GHEADID, new { id = "txt_Hidden_GHEADID_4TH" })
+                                                @Html.HiddenFor(model => model.DOSEID, new { id = "txt_Hidden_DOSEID_4TH" })
+                                                <td style="width: 120px;">
+                                                    @Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, htmlAttributes: new { id = "EntryTypeID_4TH", @class = "form-control input-sm" })
+                                                </td>
+                                                <td id="Medicine_div_4TH">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.GHEADEN4" id="MedicineNameID_4TH" placeholder="Medicine name" />
+                                                </td>
+                                                <td id="Result_div_4TH">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.RESULT" id="Resutltid_4TH" placeholder="Medicine name" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.DoseName" id="DoseName_4TH" placeholder="Dose Name" />
+                                                </td>
+                                                <td>
+                                                    @Html.DropDownListFor(model => model.DDMMTP, LitOfTime, htmlAttributes: new { id = "Time_4TH", @class = "form-control input-sm" })
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control input-sm" data-ng-model="newChild.DDMMQTY" id="Qty_4TH" min="0" max="99999999" placeholder="0" />
+                                                </td>
+
+                                                <td id="InsertButton_4TH_ShowORhide"><input id="insertButton_4th" type="submit" value="Insert" data-ng-click="addrow_4TH($event)" class="btn btn-primary" /></td>
+                                            </tr>
+
+                                            <tr data-ng-repeat="testitem in FourthPartData">
+                                                <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.COMPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSNO}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSSL}}</p></td>
+
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSDT}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.RXPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.PARTSL }}</p></td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.ENTRYTP }}</p>
+                                                    @*@Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, new { id = "gridEntryTypeID_4TH", data_ng_show = "testitem.editMode", data_ng_model = "testitem.ENTRYTP", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GheadenOrResult }}</p>
+                                                    @*@Html.DropDownListFor(model => model.GHEADID, listOfDiagnosisName, new { id = "gridDiagnosisNameID_4TH", data_ng_show = "testitem.editMode", data_ng_model = "testitem.GHEADID", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.DoseName }}</p>
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.DDMMTP }}</p>
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.DDMMQTY }}</p>
+                                                </td>
+
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode"><a data-ng-click="deleteTestitem_4TH(testitem)" href="javascript:;">Delete</a></p>
+                                                    @*<p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit_4TH(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem_4TH(testitem)" href="javascript:;">Delete</a></p>
+                                                        <p data-ng-show="testitem.editMode"><a data-ng-click="update_4TH(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel__4TH(testitem)" href="javascript:;">Cancel</a></p>*@
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="5TH">
+                            <div class="col-md-12">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">Advice </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Advice</th>
+                                                <th id="Button_5th_div"></th>
+                                            </tr>
+
+                                            <tr>
+                                                @Html.HiddenFor(model => model.PARTSL, new { id = "txt_5TH_Part", @Value = Convert.ToString("5TH") })
+                                                @Html.HiddenFor(model => model.GCATID, new { id = "txt_GCtegoryid_5TH", @Value = Convert.ToString(gCatId_5TH) })
+                                                @Html.HiddenFor(model => model.GHEADID, new { id = "txt_Hidden_GHEADID_5TH" })
+                                                <td style="width: 120px;">
+                                                    @Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, htmlAttributes: new { id = "EntryTypeID_5TH", @class = "form-control input-sm" })
+                                                </td>
+                                                <td id="Advice_div_5TH">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.GHEADEN5" id="AdviceID_5TH" placeholder="Advice name" />
+                                                </td>
+                                                <td id="Result_div_5TH">
+                                                    <input type="text" class="form-control input-sm" data-ng-model="newChild.RESULT" id="Resutltid_5TH" placeholder="Advice name" />
+                                                </td>
+
+                                                <td id="InsertButton_5TH_ShowORhide"><input id="insertButton_5TH" type="submit" value="Insert" data-ng-click="addrow_5TH($event)" class="btn btn-primary" /></td>
+                                            </tr>
+
+                                            <tr data-ng-repeat="testitem in FifthPartData">
+                                                <td hidden><strong data-ng-hide="testitem.editMode">{{testitem.ID}}</strong></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.COMPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSNO}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSSL}}</p></td>
+
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.TRANSDT}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.RXPID}}</p></td>
+                                                <td hidden><p data-ng-hide="testitem.editMode">{{ testitem.PARTSL }}</p></td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.ENTRYTP }}</p>
+                                                    @*@Html.DropDownListFor(model => model.ENTRYTP, ListOfEntryType, new { id = "gridEntryTypeID_5TH", data_ng_show = "testitem.editMode", data_ng_model = "testitem.ENTRYTP", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode">{{ testitem.GheadenOrResult }}</p>
+                                                    @*@Html.DropDownListFor(model => model.GHEADID, listOfDiagnosisName, new { id = "gridDiagnosisNameID_5TH", data_ng_show = "testitem.editMode", data_ng_model = "testitem.GHEADID", @class = "form-control" })*@
+                                                </td>
+                                                <td>
+                                                    <p data-ng-hide="testitem.editMode"><a data-ng-click="deleteTestitem_5TH(testitem)" href="javascript:;">Delete</a></p>
+                                                    @*<p data-ng-hide="testitem.editMode"><a data-ng-click="toggleEdit_5TH(testitem)" href="javascript:;">Edit</a> | <a data-ng-click="deleteTestitem_5TH(testitem)" href="javascript:;">Delete</a></p>
+                                                        <p data-ng-show="testitem.editMode"><a data-ng-click="update_5TH(testitem)" href="javascript:;">Save</a> | <a data-ng-click="toggleEdit_Cancel__5TH(testitem)" href="javascript:;">Cancel</a></p>*@
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+                        //Latitute & longitude
+                        <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+                        <script language="javascript" type="text/javascript">
+                            $(function () {
+                                navigator.geolocation.getCurrentPosition(showPosition);
+                                //navigator.geolocation.getCurrentPosition(showPosition, positionError);
+
+                                function showPosition(position) {
+                                    var coordinates = position.coords;
+                                    $("#lat").val(coordinates.latitude);
+                                    $("#lon").val(coordinates.longitude);
+
+                                    $("#latlon").val(
+                                        $("#lat").val() + "," + $("#lon").val()
+                                    );
+                                }
+                            });
+                        </script>
+
+
+                        <script type="text/javascript">
+
+                            $(document).ready(function () {
+
+
+
+                                $('#DiagnosisNameID_1ST').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Resutltid_1ST').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#HeadParticular_2ND').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Resutltid_2ND').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Investigation_3RD').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Resutltid_3RD').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#MedicineNameID_4TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Resutltid_4TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#DoseName_4TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Qty_4TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#AdviceID_5TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBox
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#Resutltid_5TH').bind("keyup keypress", function (e) { // Enter button disable when push the enter button in TextBoxe
+                                    var code = e.keyCode || e.which;
+                                    if (code == 13) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                });
+
+
+
+
+
+
+
+
+
+                                // Master Field
+                                $("#txt_NextDate").datepicker({
+                                    dateFormat: 'dd-M-yy',
+                                    changeYear: true,
+                                    onClose: function (dateText, inst) {
+                                        document.getElementById("txt_Amount").focus();
+                                    }
+                                });
+
+
+
+                                // Master Field
+                                $('#txt_RxpPIDM').autocomplete({
+
+                                    //source: '@Url.Action("TagSearch", "Prescribe")',
+                                    source: function (request, response) {
+                                        var patientType = $("#txt_RxpType").val();
+                                        $.ajax({
+                                            url: '/Prescribe/TagSearch',
+                                            type: 'GET',
+                                            cache: false,
+                                            data: { character: request.term, type: patientType },
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                response($.map(data, function (item) {
+                                                    return {
+                                                        label: item,
+                                                        value: item,
+                                                    };
+                                                }));
+                                            }
+                                        });
+                                    },
+                                    change: $('#txt_RxpPIDM').keyup(_.debounce(txtOneChanged, 500)),
+                                    select: function (event, ui) {
+                                        $("#txt_RxpPIDM").val(ui.item.label);
+                                        txtOneChanged();
+                                    },
+
+                                });
+                                function txtOneChanged() {
+                                    var changedText = $("#txt_RxpPIDM").val();
+                                    var patientType = $("#txt_RxpType").val();
+                                    var txtBox = document.getElementById('txt_RxpPIDM');
+                                    var hiddentxt_RxPID = document.getElementById('Hiddentxt_RxPID');
+                                    var txt_PatientName = document.getElementById('txt_PatientName');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword', { "ChangedText": changedText, "PatientType": patientType },
+                                            function (result) {
+                                                txtBox.value = result.PATIENTIDM;
+                                                hiddentxt_RxPID.value = result.PATIENTID;
+                                                txt_PatientName.value = result.PATIENTNM;
+                                                document.getElementById("txt_RxpPIDM").focus();
+
+                                                if (result.PATIENTID != "") {
+                                                    $('#submitButton_DivID').show();
+                                                }
+                                            });
+                                    }
+                                    $("#Hiddentxt_RxPID").val("");
+                                    $("#txt_PatientName").val("");
+
+                                    $('#CompleteButton_DivID').hide();
+                                    $('#PrintButton_DivId').hide();
+                                    $('#submitButton_DivID').hide();
+                                }
+
+
+
+
+
+                                // Master Field
+                                $('#submitButtonID').click(function () {
+                                    var patientName = $('#txt_PatientName').val();
+                                    if (patientName != "") {
+                                        $('#CompleteButton_DivID').show();
+                                        $('#PrintButton_DivId').show();
+
+                                        $('#Button_1st_div').show();
+                                        $('#Button_2nd_div').show();
+                                        $('#Button_3rd_div').show();
+                                        $('#Button_4th_div').show();
+                                        $('#Button_5th_div').show();
+                                        $('#InsertButton_1st_ShowORhide').show();
+                                        $('#InsertButton_2ND_ShowORhide').show();
+                                        $('#InsertButton_3RD_ShowORhide').show();
+                                        $('#InsertButton_4TH_ShowORhide').show();
+                                        $('#InsertButton_5TH_ShowORhide').show();
+                                        $('#submitButton_DivID').hide();
+
+                                        $('#txt_PatientName').attr('readonly', true);
+                                        $('#txt_RxpPIDM').attr('readonly', true);
+                                        $('#txt_RxpType').attr('readonly', true);
+                                    }
+                                });
+
+
+
+
+
+                                //Master Field
+                                var txtShowSubmitButton = $('#txt_ShowSubmitButton').val();
+                                if (txtShowSubmitButton == "True") {
+                                    $('#CompleteButton_DivID').hide();
+                                    $('#PrintButton_DivId').hide();
+                                    $('#submitButton_DivID').show();
+                                } else {
+                                    $('#CompleteButton_DivID').hide();
+                                    $('#PrintButton_DivId').hide();
+                                    $('#submitButton_DivID').hide();
+                                }
+                                //1st Part insert button hide initally.
+                                $('#Button_1st_div').hide();
+                                $('#Result_div_1ST').hide();
+                                $('#InsertButton_1st_ShowORhide').hide();
+                                //2nd Part insert button hide initally.
+                                $('#Button_2nd_div').hide();
+                                $('#InsertButton_2ND_ShowORhide').hide();
+                                //3rd Part insert button hide initally.
+                                $('#Button_3rd_div').hide();
+                                $('#Result_div_3RD').hide();
+                                $('#InsertButton_3RD_ShowORhide').hide();
+                                //4th Part insert button hide initally.
+                                $('#Button_4th_div').hide();
+                                $('#Result_div_4TH').hide();
+                                $('#InsertButton_4TH_ShowORhide').hide();
+                                //5th Part insert button hide initally.
+                                $('#Button_5th_div').hide();
+                                $('#Result_div_5TH').hide();
+                                $('#InsertButton_5TH_ShowORhide').hide();
+
+
+
+
+
+
+
+
+                                ////1st Part Tab
+                                //$('#InsertButton_1st_ShowORhide').click(function () {
+                                //    $('#InsertButton_1st_ShowORhide').show();
+                                //    $('#submitButtonID').hide();
+                                //});
+
+
+                                //1st Part Tab
+                                $('#EntryTypeID_1ST').change(function () {
+
+                                    var changedtxt = $('#EntryTypeID_1ST').val();
+                                    if (changedtxt == "MANUAL") {
+                                        $('#DiagnosisNameID_1ST').val("");
+                                        $('#txt_Hidden_GHEADID_1ST').val("");
+                                        $('#Result_div_1ST').show();
+                                        $('#Diagnosis_div_1ST').hide();
+                                    }
+                                    else {
+                                        $('#Resutltid_1ST').val("");
+                                        $('#Result_div_1ST').hide();
+                                        $('#Diagnosis_div_1ST').show();
+                                    }
+                                });
+
+                                //1st Part Tab
+                                $('#DiagnosisNameID_1ST').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Diagnosis", "Prescribe")',
+                                    change: $('#DiagnosisNameID_1ST').keyup(_.debounce(getDiagnosisKeywordSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#DiagnosisNameID_1ST").val(ui.item.label);
+                                        getDiagnosisKeywordSearch();
+                                    },
+
+                                });
+                                function getDiagnosisKeywordSearch() {
+                                    var changedText = $("#DiagnosisNameID_1ST").val();
+                                    var hidden_GHEADID_1ST = document.getElementById('txt_Hidden_GHEADID_1ST');
+                                    var txtBox = document.getElementById('DiagnosisNameID_1ST');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_Diagnosis', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.GHEADEN;
+                                                hidden_GHEADID_1ST.value = result.GHEADID;
+                                                document.getElementById("DiagnosisNameID_1ST").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_GHEADID_1ST").val("");
+                                }
+
+
+
+
+
+
+
+
+
+
+                                //2nd Part Tab
+                                $('#EntryTypeID_2ND').change(function () {
+                                    var changedtxt = $('#EntryTypeID_2ND').val();
+                                    if (changedtxt == "MANUAL") {
+                                        $('#HeadParticular_2ND').val("");
+                                        $('#txt_Hidden_GHEADID_2ND').val("");
+                                        $('#HeadParticular_2ND').attr('readonly', true);
+                                        document.getElementById("Resutltid_2ND").focus();
+                                    }
+                                    else {
+                                        $('#HeadParticular_2ND').attr('readonly', false);
+                                        document.getElementById("HeadParticular_2ND").focus();
+                                    }
+                                });
+
+                                //2nd Part Tab
+                                $('#HeadParticular_2ND').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Particulars", "Prescribe")',
+                                    change: $('#HeadParticular_2ND').keyup(_.debounce(getParticularsKeywordSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#HeadParticular_2ND").val(ui.item.label);
+                                        getParticularsKeywordSearch();
+                                    },
+
+                                });
+                                function getParticularsKeywordSearch() {
+                                    var changedText = $("#HeadParticular_2ND").val();
+                                    var gHEADID_2ND = document.getElementById('txt_Hidden_GHEADID_2ND');
+                                    var txtBox = document.getElementById('HeadParticular_2ND');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_HeadParticulars', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.GHEADEN;
+                                                gHEADID_2ND.value = result.GHEADID;
+                                                document.getElementById("HeadParticular_2ND").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_GHEADID_2ND").val("");
+                                }
+
+
+
+
+
+
+
+
+
+                                //3rd Part Tab
+                                $('#EntryTypeID_3RD').change(function () {
+
+                                    var changedtxt = $('#EntryTypeID_3RD').val();
+                                    if (changedtxt == "MANUAL") {
+                                        $('#Investigation_3RD').val("");
+                                        $('#txt_GCtegoryid_3RD').val("");
+                                        $('#txt_Hidden_GHEADID_3RD').val("");
+                                        $('#Result_div_3RD').show();
+                                        $('#Investigation_div_3RD').hide();
+                                    }
+                                    else {
+                                        $('#Resutltid_3RD').val("");
+                                        $('#Result_div_3RD').hide();
+                                        $('#Investigation_div_3RD').show();
+                                    }
+                                });
+
+                                //3rd Part Tab
+                                $('#Investigation_3RD').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Investigations", "Prescribe")',
+                                    change: $('#Investigation_3RD').keyup(_.debounce(getInvestigationSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#Investigation_3RD").val(ui.item.label);
+                                        getInvestigationSearch();
+                                    },
+
+                                });
+                                function getInvestigationSearch() {
+                                    var changedText = $("#Investigation_3RD").val();
+                                    var hidden_GHEADID_3RD = document.getElementById('txt_Hidden_GHEADID_3RD');
+                                    var hidden_GCATID_3RD = document.getElementById('txt_GCtegoryid_3RD');
+                                    var txtBox = document.getElementById('Investigation_3RD');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_Investigations', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.GHEADEN;
+                                                hidden_GHEADID_3RD.value = result.GHEADID;
+                                                hidden_GCATID_3RD.value = result.GCATID;
+                                                document.getElementById("Investigation_3RD").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_GHEADID_3RD").val("");
+                                    $("#txt_GCtegoryid_3RD").val("");
+                                }
+
+
+
+
+
+
+
+
+
+
+                                //4th Part Tab
+                                $('#EntryTypeID_4TH').change(function () {
+
+                                    var changedtxt = $('#EntryTypeID_4TH').val();
+                                    if (changedtxt == "MANUAL") {
+                                        $('#MedicineNameID_4TH').val("");
+                                        $('#txt_GCtegoryid_4TH').val("");
+                                        $('#txt_Hidden_GHEADID_4TH').val("");
+                                        $('#Result_div_4TH').show();
+                                        $('#Medicine_div_4TH').hide();
+                                    }
+                                    else {
+                                        $('#Resutltid_4TH').val("");
+                                        $('#Result_div_4TH').hide();
+                                        $('#Medicine_div_4TH').show();
+                                    }
+                                });
+
+                                //4th Part Tab
+                                $('#MedicineNameID_4TH').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Medicine", "Prescribe")',
+                                    change: $('#MedicineNameID_4TH').keyup(_.debounce(getMedicineKeywordSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#MedicineNameID_4TH").val(ui.item.label);
+                                        getMedicineKeywordSearch();
+                                    },
+
+                                });
+                                function getMedicineKeywordSearch() {
+                                    var changedText = $("#MedicineNameID_4TH").val();
+                                    var hidden_GHEADID_4TH = document.getElementById('txt_Hidden_GHEADID_4TH');
+                                    var hidden_GCATID_4TH = document.getElementById('txt_GCtegoryid_4TH');
+                                    var txtBox = document.getElementById('MedicineNameID_4TH');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_Medicine', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.MEDINM;
+                                                hidden_GHEADID_4TH.value = result.MEDIID;
+                                                hidden_GCATID_4TH.value = result.MCATID;
+                                                document.getElementById("MedicineNameID_4TH").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_GHEADID_4TH").val("");
+                                    $("#txt_GCtegoryid_4TH").val("");
+                                }
+
+                                //4th Part Tab
+                                $('#DoseName_4TH').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Dose", "Prescribe")',
+                                    change: $('#DoseName_4TH').keyup(_.debounce(getDoseKeywordSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#DoseName_4TH").val(ui.item.label);
+                                        getDoseKeywordSearch();
+                                    },
+
+                                });
+                                function getDoseKeywordSearch() {
+                                    var changedText = $("#DoseName_4TH").val();
+                                    var hidden_DOSEID_4TH = document.getElementById('txt_Hidden_DOSEID_4TH');
+                                    var txtBox = document.getElementById('DoseName_4TH');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_Dose', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.GHEADEN;
+                                                hidden_DOSEID_4TH.value = result.GHEADID;
+                                                document.getElementById("DoseName_4TH").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_DOSEID_4TH").val("");
+                                }
+
+
+
+
+
+
+
+
+
+
+
+                                //5th Part Tab
+                                $('#EntryTypeID_5TH').change(function () {
+
+                                    var changedtxt = $('#EntryTypeID_5TH').val();
+                                    if (changedtxt == "MANUAL") {
+                                        $('#AdviceID_5TH').val("");
+                                        $('#txt_Hidden_GHEADID_5TH').val("");
+                                        $('#Result_div_5TH').show();
+                                        $('#Advice_div_5TH').hide();
+                                    }
+                                    else {
+                                        $('#Resutltid_5TH').val("");
+                                        $('#Result_div_5TH').hide();
+                                        $('#Advice_div_5TH').show();
+                                    }
+                                });
+
+                                //5th Part Tab
+                                $('#AdviceID_5TH').autocomplete({
+
+                                    source: '@Url.Action("TagSearch_Advice", "Prescribe")',
+                                    change: $('#AdviceID_5TH').keyup(_.debounce(getAdviceKeywordSearch, 500)),
+                                    select: function (event, ui) {
+                                        $("#AdviceID_5TH").val(ui.item.label);
+                                        getDiagnosisKeywordSearch();
+                                    },
+
+                                });
+                                function getAdviceKeywordSearch() {
+                                    var changedText = $("#AdviceID_5TH").val();
+                                    var hidden_GHEADID_5TH = document.getElementById('txt_Hidden_GHEADID_5TH');
+                                    var txtBox = document.getElementById('AdviceID_5TH');
+                                    if (changedText != "") {
+                                        $.getJSON(
+                                            '/Prescribe/keyword_Advice', { "ChangedText": changedText },
+                                            function (result) {
+                                                txtBox.value = result.GHEADEN;
+                                                hidden_GHEADID_5TH.value = result.GHEADID;
+                                                document.getElementById("AdviceID_5TH").focus();
+                                            });
+                                    }
+                                    $("#txt_Hidden_GHEADID_5TH").val("");
+                                }
+
+                            });
+
+                        </script>
+
+
+
+                        <style type="text/css">
+                            .ui-autocomplete {
+                                position: absolute;
+                                cursor: default;
+                                background: #f0ffff;
+                                max-height: 200px;
+                                overflow-y: auto;
+                                /* prevent horizontal scrollbar */
+                                overflow-x: hidden;
+                                /* add padding to account for vertical scrollbar */
+                                padding-right: 20px;
+                            }
+                        </style>
+
+}
+
+<link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+@*<script src="~/Scripts/jquery-1.9.1.min.js"></script>*@
+<script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+<script src="~/Scripts/Underscore.js"></script>
+
+<script src="~/Scripts/angularjs/1.0.5/angular.js"></script>
+<script src="~/Scripts/Prescribe/Prescribe.js"></script>
+<script src="~/Scripts/angularjs/ui-bootstrap-tpls-0.4.0.js"></script>

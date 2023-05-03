@@ -1,0 +1,233 @@
+﻿@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.PadDTO
+@{
+    Layout = null;
+
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    var companyId = Convert.ToInt64(Model.COMPID);
+
+    string companyName = "", address = "", contactNo = "";
+    var re = from m in db.AslCompanyDbSet where m.COMPID == companyId select new { m.COMPNM, m.ADDRESS, m.CONTACTNO };
+    foreach (var n in re)
+    {
+        companyName = n.COMPNM;
+        address = n.ADDRESS;
+        contactNo = n.CONTACTNO;
+    }
+    var compNm = companyName;
+    var Address = address;
+    var contactno = contactNo;
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+
+    string HL1 = "", HL2 = "", HL3 = "", HL4 = "", HL5 = "", HM1 = "", HM2 = "", HM3 = "", HR1 = "", HR2 = "", HR3 = "", HR4 = "", HR5 = "",
+       FL1 = "", FL2 = "", FL3 = "", FL4 = "", FM1 = "", FM2 = "", FM3 = "", FR1 = "", FR2 = "", FR3 = "", FR4 = "";
+    var getPadInfo = (from m in db.RxPadDbSet where m.COMPID == companyId select m).ToList();
+    foreach (var pad in getPadInfo)
+    {
+        HL1 = pad.HL1;
+        HL2 = pad.HL2;
+        HL3 = pad.HL3;
+        HL4 = pad.HL4;
+        HL5 = pad.HL5;
+
+        HM1 = pad.HM1;
+        HM2 = pad.HM2;
+        HM3 = pad.HM3;
+
+        HR1 = pad.HR1;
+        HR2 = pad.HR2;
+        HR3 = pad.HR3;
+        HR4 = pad.HR4;
+        HR5 = pad.HR5;
+
+        FL1 = pad.FL1;
+        FL2 = pad.FL2;
+        FL3 = pad.FL3;
+        FL4 = pad.FL4;
+
+        FM1 = pad.FM1;
+        FM2 = pad.FM2;
+        FM3 = pad.FM3;
+
+        FR1 = pad.FR1;
+        FR2 = pad.FR2;
+        FR3 = pad.FR3;
+        FR4 = pad.FR4;
+    }
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>Pad</title>
+    <link href="~/Content/ReportCSS/style.css" rel="stylesheet" />
+</head>
+
+<body style=" background-color:#fafafa;">
+    <div style="width: 960px; margin: 0px auto; border: 1px solid #d3d3d3; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); background: none repeat scroll 0 0 white;">
+        <table id="mainTable" border="0" width="100%">
+            <thead>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #006859; height: 110px;">
+                    @*<td colspan="6" align="left" style="padding-left: 4px;">
+                            <p style="color: white;padding-left:4px">@HL1</p>
+                            <p style="color:white;padding-left:4px">@HL2</p>
+                            <p style="color:white;padding-left:4px">@HL3</p>
+                            <p style="color:white;padding-left:4px">@HL4</p>
+                            <p style="color:white;padding-left:4px">@HL5</p>
+                        </td>
+                        <td colspan="6" align="center">
+                            <p style="color: white;padding-left:4px">@HM1</p>
+                            <p style="color:white;padding-left:4px">@HM2</p>
+                            <p style="color:white;padding-left:4px">@HM3</p>
+                        </td>
+                        <td colspan="6" align="right" style="padding-right: 8px;" >
+                            <p style="color: white;padding-left:4px">@HR1</p>
+                            <p style="color:white;padding-left:4px">@HR2</p>
+                            <p style="color:white;padding-left:4px">@HR3</p>
+                            <p style="color:white;padding-left:4px">@HR4</p>
+                            <p style="color:white;padding-left:4px">@HR5</p>
+                        </td>*@
+                    <td colspan="18">
+                        <table style="width: 100%">
+                            <tr>
+                                <td colspan="6" align="left" style="padding-left: 4px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HL1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL4</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HL5</p>
+                                </td>
+                                <td colspan="6" align="center" style=" width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HM1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HM2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HM3</p>
+                                </td>
+                                <td colspan="6" align="right" style="padding-right: 8px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@HR1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR4</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@HR5</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <tr id="databody" style="height: 1140px;"></tr>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #006859; height: 100px">
+                    @*<td colspan="6" align="left" style="padding-left: 4px;" style="width: 33.33%;">
+                        <p style="color: white;padding:4px">@FL1</p>
+                        <p style="color:white;padding-left:4px">@FL2</p>
+                        <p style="color:white;padding-left:4px">@FL3</p>
+                        <p style="color:white;padding-left:4px">@FL4</p>
+                    </td>
+                    <td colspan="6" align="center" style="width: 33.33%;">
+                        <p style="color: white;padding:4px">@FM1</p>
+                        <p style="color:white;padding-left:4px">@FM2</p>
+                        <p style="color:white;padding-left:4px">@FM3</p>
+                    </td>
+                    <td colspan="6" align="right" style="padding-right: 8px;width: 33.33%;">
+                        <p style="color: white;padding-left:4px">@FR1</p>
+                        <p style="color:white;padding-left:4px">@FR2</p>
+                        <p style="color:white;padding-left:4px">@FR3</p>
+                        <p style="color:white;padding-left:4px">@FR4</p>
+                    </td>*@
+                    <td colspan="18">
+                        <table style="width: 100%">
+                            <tr>
+                                <td colspan="6" align="left" style="padding-left: 4px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FL1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FL4</p>
+                                </td>
+                                <td colspan="6" align="center" style=" width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FM1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FM2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FM3</p>
+                                </td>
+                                <td colspan="6" align="right" style="padding-right: 8px;width: 33.33%;">
+                                    <p style="color: white;padding-left:4px;font-size: 16px;">@FR1</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR2</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR3</p>
+                                    <p style="color:white;padding-left:4px;font-size: 14px;">@FR4</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+
+        </table>
+    </div>
+
+</body>
+</html>

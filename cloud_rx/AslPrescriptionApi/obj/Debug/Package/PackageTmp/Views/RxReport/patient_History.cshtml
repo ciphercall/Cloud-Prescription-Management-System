@@ -1,0 +1,260 @@
+﻿@using System.Web.Optimization
+@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.PatientDTO
+
+@{
+    ViewBag.Title = "patient_History";
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    Int64 companyID = Convert.ToInt64(HttpContext.Current.Session["loggedCompID"].ToString());
+    Int64 loggedUserID = Convert.ToInt64(HttpContext.Current.Session["loggedUserID"].ToString());
+
+
+    var permission_Check = from m in db.AslRoleDbSet
+                           where m.COMPID == companyID && m.USERID == loggedUserID
+                               && m.CONTROLLERNAME == "RxReport" && m.ACTIONNAME == "patient_History"
+                           select m;
+    var Status = "";
+    foreach (var check in permission_Check)
+    {
+        Status = check.STATUS;
+    }
+
+    if (Status == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+}
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+
+    @Html.HiddenFor(model => model.ID, new { id = "Hiddentxt_pst_Patient_Id" })
+    @Html.HiddenFor(model => model.COMPID, new { id = "HiddentxtCompanyID", @Value = companyID })
+    @Html.HiddenFor(model => model.RXPID, new { id = "HiddentxtPATIENTID" })
+    @Html.HiddenFor(model => model.TRANSYY, new { id = "HiddentxtPATIENTYY" })
+    <div id="contentHeaderBox">
+        <h1 style="padding-left: 16px;">Patient History</h1>
+    </div>
+    <br />
+
+    <div class="col-md-12">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Patient ID", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-3">
+                    @Html.TextBoxFor(model => model.RXPIDM, htmlAttributes: new { id = "txt_PATIENTIDM", @class = "form-control", autofocus = true })
+                </div>
+                @if (TempData["selectPatientID"] != null)
+                {
+                    <div class="col-md-7">
+                        <h5 style="color: #C03523">@TempData["selectPatientID"]</h5>
+                    </div>
+                }
+                <div class="col-md-4">
+                    <input type="submit" class="btn btn-success" value="Print" formtarget="_blank" id="submitID" autofocus />
+                </div>
+            </div>
+
+            <br />
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Patient Name", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-10">
+                    @Html.TextBoxFor(model => model.RXPNM, htmlAttributes: new { id = "txt_PATIENTNM", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.RXPNM, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Address", htmlAttributes: new { @class = "control-label" })
+                </div>
+
+                <div class="col-md-10">
+                    @Html.TextBoxFor(model => model.ADDRESS, htmlAttributes: new { id = "txt_ADDRESS", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.ADDRESS, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Gender", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.GENDER, htmlAttributes: new { id = "txt_GENDER", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.GENDER, "", new { @class = "text-danger" })
+                </div>
+                <div class="col-md-2">
+                    @Html.Label("name", "Age", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.AGE, htmlAttributes: new { id = "txt_AGE", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.AGE, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Mobile No (1)", htmlAttributes: new { @class = "control-label" })
+                </div>
+
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.MOBNO1, htmlAttributes: new { id = "txt_MOBNO1", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.MOBNO1, "", new { @class = "text-danger" })
+                </div>
+                <div class="col-md-2">
+                    @Html.Label("name", "Mobile No (2)", htmlAttributes: new { @class = "control-label" })
+                </div>
+
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.MOBNO2, htmlAttributes: new { id = "txt_MOBNO2", @class = "form-control", @readonly = "readonly" })
+                    @Html.ValidationMessageFor(model => model.MOBNO2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.Label("name", "Referer name", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="txt_REFERName" readonly="readonly">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+        $('#txt_PATIENTIDM').autocomplete({
+
+            source: '@Url.Action("TagSearch", "Patient")',
+            change: $('#txt_PATIENTIDM').keyup(_.debounce(txtOneChanged, 500)),
+            select: function (event, ui) {
+                $("#txt_PATIENTIDM").val(ui.item.label);
+                txtOneChanged();
+            },
+        });
+        
+
+
+
+        function txtOneChanged() {
+
+            var changedText = $("#txt_PATIENTIDM").val();
+            var txtBox = document.getElementById('txt_PATIENTIDM');
+
+            var hiddentxt_pst_Patient_Id = document.getElementById('Hiddentxt_pst_Patient_Id');
+            var hiddentxtCompanyId = document.getElementById('HiddentxtCompanyID');
+            var hiddentxtPATIENTID = document.getElementById('HiddentxtPATIENTID');
+            var HiddentxtPATIENTYY = document.getElementById('HiddentxtPATIENTYY');
+            var txt_PATIENTNM = document.getElementById('txt_PATIENTNM');
+            var txtAddress = document.getElementById('txt_ADDRESS');
+            var txt_GENDER = document.getElementById('txt_GENDER');
+            var txt_AGE = document.getElementById('txt_AGE');
+            var txtMobileNo1 = document.getElementById('txt_MOBNO1');
+            var txtMobileNo2 = document.getElementById('txt_MOBNO2');
+            var txt_REFERName = document.getElementById('txt_REFERName');
+
+
+            if (changedText != "") {
+                $.getJSON(
+              '/Patient/keyword', { "ChangedText": changedText },
+               function (myData) {
+                   txtBox.value = myData.PATIENTIDM;
+
+                   hiddentxt_pst_Patient_Id.value = myData.pst_Patient_Id;
+                   hiddentxtCompanyId.value = myData.COMPID;
+                   hiddentxtPATIENTID.value = myData.PATIENTID;
+                   HiddentxtPATIENTYY.value = myData.PATIENTYY;
+                   txt_PATIENTNM.value = myData.PATIENTNM;
+                   txtAddress.value = myData.ADDRESS;
+                   txt_GENDER.value = myData.GENDER;
+                   if (txt_GENDER.value == "M") {
+                       txt_GENDER.value = "Male";
+                   }
+                   else if (txt_GENDER.value == "F") {
+                       txt_GENDER.value = "Female";
+                   }
+                   txt_AGE.value = myData.AGE;
+                   txtMobileNo1.value = myData.MOBNO1;
+                   txtMobileNo2.value = myData.MOBNO2;
+                   txt_REFERName.value = myData.REFERNM;
+
+                   //document.getElementById("txt_PATIENTIDM").focus();
+               });
+                $("#Hiddentxt_pst_Patient_Id").val("");
+                $("#HiddentxtCompanyID").val("");
+                $("#HiddentxtPATIENTID").val("");
+                $("#HiddentxtPATIENTYY").val("");
+
+                $("#txt_PATIENTNM").val("");
+                $("#txt_ADDRESS").val("");
+                $("#txt_GENDER").val("");
+                $("#txt_AGE").val("");
+                $("#txt_MOBNO1").val("");
+                $("#txt_MOBNO2").val("");
+                $("#txt_EMAILID").val("");
+                $("#txt_REFERName").val("");
+
+            }
+        }
+    });
+    </script>
+
+    <style type="text/css">
+        .ui-autocomplete {
+            position: absolute;
+            cursor: default;
+            background: #f0ffff;
+            max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+        }
+    </style>
+}
+
+
+
+<link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+<script src="~/Content/jquery-2.1.4/jquery-2.1.4.min.js"></script>
+<script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+<script src="~/Scripts/Underscore.js"></script>

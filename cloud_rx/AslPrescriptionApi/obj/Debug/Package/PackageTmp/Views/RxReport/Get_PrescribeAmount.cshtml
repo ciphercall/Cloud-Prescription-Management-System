@@ -1,0 +1,213 @@
+﻿@using System.Data
+@using System.Data.SqlClient
+@using System.Data.SqlTypes
+@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.ReportModelDTO
+
+@{
+    ViewBag.Title = "Get_PrescribeAmount";
+    Layout = null;
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin" || LoggedUserTp == "UserAdmin" || LoggedUserTp == "User") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+    var companyId = Convert.ToInt64(Model.COMPID);
+
+    string companyName = "", address = "", contactNo = "";
+    var re = from m in db.AslCompanyDbSet where m.COMPID == companyId select new { m.COMPNM, m.ADDRESS, m.CONTACTNO };
+    foreach (var n in re)
+    {
+        companyName = n.COMPNM;
+        address = n.ADDRESS;
+        contactNo = n.CONTACTNO;
+    }
+    var compNm = companyName;
+    var Address = address;
+    var contactno = contactNo;
+
+    DateTime fdate = Convert.ToDateTime(Model.Report_FromDate);
+    string ddt = fdate.ToString("dd-MMM-yyyy");
+    var fromdate = ddt;
+
+    DateTime tDate = Convert.ToDateTime(Model.Report_ToDate);
+    string tdd = tDate.ToString("dd-MMM-yyyy");
+    var todate = tdd;
+
+
+
+    TimeZoneInfo timeZoneInfo;
+    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Asia Standard Time");
+    DateTime currentDateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timeZoneInfo);
+
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="~/Content/reportcss/style.css" rel="stylesheet" />
+</head>
+
+<body style=" background-color:#fafafa;">
+    @*<input id="print" tabindex="1" type="button" value="Print" onclick="ClosePrint()" />*@
+    <div style="width: 960px; margin: 0px auto; border: 1px solid #d3d3d3; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); background: none repeat scroll 0 0 white;">
+        <table id="mainTable" border="0" width="100%">
+            <thead>
+                <tr>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="10%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+                    <td width="5%"></td>
+
+                </tr>
+                <tr style="background-color: #00689b">
+                    <td colspan="12">
+                        <h3 style="color: white;padding:4px">@compNm</h3>
+                        <p style="color:white;padding-left:4px">@Address<br />  @contactno</p>
+                    </td>
+
+                    <td colspan="6" style="color: white;padding:8px" align="right">
+                        Powered By<br />Alchemy Software
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="12" align="left" style="padding: 4px; font-weight: bold">Date Wise Patient Information</td>
+                    <td align="right" colspan="6" style="padding:8px">Print:@currentDateTime.ToString("dd-MM-yy hh:mm tt")</td>
+                </tr>
+                <tr style="outline: thin solid">
+                    <td colspan="9" style="padding:4px;font-weight:bold">From Date : <span style="font-weight: bold">@fromdate</span></td>
+                    <td colspan="9" style="font-weight: bold"> To Date : <span style="font-weight:bold">@todate</span></td>
+                </tr>
+
+                <tr style="outline: thin solid">
+                    <td colspan="2" style="color: black; padding: 4px" align="center">Date</td>
+                    <td colspan="2" style="color: black; padding: 4px; border-left: 1px solid;" align="center">Memo No</td>
+                    <td colspan="2" style="color: black; padding: 4px; border-left: 1px solid;" align="center">Patient ID</td>
+                    <td colspan="5" style="color: black; padding: 4px;border-left: 1px solid;" align="center">Name</td>
+                    <td colspan="2" style="color: black; padding: 4px;border-left: 1px solid;" align="center">Age</td>
+                    <td colspan="2" style="color: black; padding: 4px;border-left: 1px solid;" align="center">Gender</td>
+                    <td colspan="3" style="color: black; padding: 4px;border-left: 1px solid;" align="center">Amount</td>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    string Date = "", name = "", age = "", Gender = "", MemoNO = "";
+                    Int64 PatientID = 0, patientIDM = 0, Amount = 0,TotalAmount=0;
+
+
+                    string x1 = fdate.ToString("dd-MMM-yyyy");
+                    DateTime From_Date = DateTime.Parse(x1);
+                    string x2 = tDate.ToString("dd-MMM-yyyy");
+                    DateTime To_Date = DateTime.Parse(x2);
+
+                    var getPrescribeMasterInfo = (from m in db.RxPrescMstDbSet where m.COMPID == companyId && m.TRANSDT >= From_Date && m.TRANSDT <= To_Date select m).ToList();
+
+                    foreach (var x in getPrescribeMasterInfo)
+                    {
+                        if (x.AMOUNT != null)
+                        {
+                            string getdate = Convert.ToString(x.TRANSDT);
+                            DateTime MyDateTime = DateTime.Parse(getdate);
+                            Date = MyDateTime.ToString("dd-MMM-yyyy");
+
+                            PatientID = Convert.ToInt64(x.RXPID);
+                            var getPatientInfo = (from m in db.RxPatientDbSet where m.COMPID == companyId && m.RXPID == PatientID select m).ToList();
+
+                            if (getPatientInfo.Count == 1)
+                            {
+                                foreach (var patient in getPatientInfo)
+                                {
+                                    patientIDM = patient.RXPIDM;
+                                    name = patient.RXPNM;
+                                    age = Convert.ToString(patient.AGE);
+                                    Gender = Convert.ToString(patient.GENDER);
+                                    if (Gender == "M")
+                                    {
+                                        Gender = "MALE";
+                                    }
+                                    else if (Gender == "F")
+                                    {
+                                        Gender = "FEMALE";
+                                    }
+                                }
+                            }
+
+                            MemoNO = x.TRANSNO;
+                            Amount = Convert.ToInt64(x.AMOUNT);
+
+                            <tr style="outline:thin solid;font-size: 14px;">
+                                <td align="center" colspan="2">
+                                    @Date
+                                </td>
+                                <td align="center" colspan="2">
+                                    @MemoNO
+                                </td>
+                                <td align="center" colspan="2">
+                                    @patientIDM
+                                </td>
+                                <td align="left" colspan="5">
+                                    @name
+                                </td>
+                                <td align="center" colspan="2">
+                                    @age
+                                </td>
+                                <td align="center" colspan="2">
+                                    @Gender
+                                </td>
+                                <td align="right" colspan="3">
+                                    @Amount
+                                </td>
+                            </tr>
+                            TotalAmount = TotalAmount + Amount;
+                        }
+                        
+                    }
+
+                    <tr style="outline:thin solid">
+                        <td colspan="2"></td>
+                        <td colspan="2"></td>
+                        <td colspan="2"></td>
+                        <td colspan="5"></td>
+                        <td colspan="2"></td>
+                        <td colspan="2" align="right"><strong>Total:</strong></td>
+                        <td colspan="3" align="right">
+                            <strong>@TotalAmount</strong>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

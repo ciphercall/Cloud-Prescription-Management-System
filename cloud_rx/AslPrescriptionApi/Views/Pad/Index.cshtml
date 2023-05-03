@@ -1,0 +1,374 @@
+﻿@using System.Web.Optimization
+@using AslPrescriptionApi.Models
+@model AslPrescriptionApi.Models.DTO.PadDTO
+
+@{
+    ViewBag.Title = "Index";
+    if (HttpContext.Current.Session["LoggedUserType"] == null)
+    {
+        Response.Redirect(Url.Action("Index", "Login"));
+    }
+
+    var LoggedUserTp = HttpContext.Current.Session["LoggedUserType"].ToString();
+    var LoggedUserStatus = HttpContext.Current.Session["LoggedUserStatus"].ToString();
+    var LoggedCompanyStatus = HttpContext.Current.Session["LoggedCompanyStatus"].ToString();
+
+    if ((LoggedUserTp == "CompanyAdmin") && LoggedUserStatus == "A" && LoggedCompanyStatus == "A")
+    {
+
+    }
+    else
+    {
+        Response.Redirect(Url.Action("Index", "Logout"));
+    }
+
+
+
+    Int64 LoggedCompId = Convert.ToInt64(System.Web.HttpContext.Current.Session["loggedCompID"]);
+    AslPrescriptionApiDbContext db = new AslPrescriptionApiDbContext();
+
+    string HL1 = "", HL2 = "", HL3 = "", HL4 = "", HL5 = "", HM1 = "", HM2 = "", HM3 = "", HR1 = "", HR2 = "", HR3 = "", HR4 = "", HR5 = "",
+        FL1 = "", FL2 = "", FL3 = "", FL4 = "", FM1 = "", FM2 = "", FM3 = "", FR1 = "", FR2 = "", FR3 = "", FR4 = "";
+    var checkData = (from m in db.RxPadDbSet where m.COMPID == LoggedCompId select m).ToList();
+    foreach (var pad in checkData)
+    {
+        HL1 = pad.HL1;
+        HL2 =pad.HL2;
+        HL3 = pad.HL3; 
+        HL4 = pad.HL4;
+        HL5 = pad.HL5;
+        
+        HM1 = pad.HM1;
+        HM2 = pad.HM2;
+        HM3 = pad.HM3;
+        
+        HR1 = pad.HR1;
+        HR2 = pad.HR2;
+        HR3 = pad.HR3;
+        HR4 = pad.HR4;
+        HR5 = pad.HR5;
+        
+        FL1 = pad.FL1;
+        FL2 = pad.FL2;
+        FL3 = pad.FL3;
+        FL4 = pad.FL4;
+        
+        FM1 = pad.FM1;
+        FM2 = pad.FM2;
+        FM3 = pad.FM3;
+        
+        FR1 = pad.FR1;
+        FR2 = pad.FR2;
+        FR3 = pad.FR3;
+        FR4 = pad.FR4;
+    }
+
+}
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    @Html.HiddenFor(model => model.COMPID, new { @Value = LoggedCompId })
+    <div id="contentHeaderBox">
+        <h1 style="padding-left:16px">Pad Information</h1>
+    </div>
+    <br />
+    <div class="col-md-12">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Header Left : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HL1, htmlAttributes: new { @class = "form-control", @Value = HL1 })
+                    @Html.ValidationMessageFor(model => model.HL1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HL2, htmlAttributes: new { @class = "form-control", @Value = HL2 })
+                    @Html.ValidationMessageFor(model => model.HL2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HL3, htmlAttributes: new { @class = "form-control",  @Value = HL3 })
+                    @Html.ValidationMessageFor(model => model.HL3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 4", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HL4, htmlAttributes: new { @class = "form-control",  @Value = HL4 })
+                    @Html.ValidationMessageFor(model => model.HL4, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 5", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HL5, htmlAttributes: new { @class = "form-control", @Value = HL5 })
+                    @Html.ValidationMessageFor(model => model.HL5, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Header Middle : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HM1, htmlAttributes: new { @class = "form-control", @Value = HM1 })
+                    @Html.ValidationMessageFor(model => model.HM1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HM2, htmlAttributes: new { @class = "form-control", @Value = HM2 })
+                    @Html.ValidationMessageFor(model => model.HM2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HM3, htmlAttributes: new { @class = "form-control",  @Value = HM3 })
+                    @Html.ValidationMessageFor(model => model.HM3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Header Right : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HR1, htmlAttributes: new { @class = "form-control", @Value = HR1 })
+                    @Html.ValidationMessageFor(model => model.HR1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HR2, htmlAttributes: new { @class = "form-control",  @Value = HR2 })
+                    @Html.ValidationMessageFor(model => model.HR2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HR3, htmlAttributes: new { @class = "form-control",  @Value = HR3 })
+                    @Html.ValidationMessageFor(model => model.HR3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 4", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HR4, htmlAttributes: new { @class = "form-control",  @Value = HR4 })
+                    @Html.ValidationMessageFor(model => model.HR4, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 5", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.HR5, htmlAttributes: new { @class = "form-control",  @Value = HR5 })
+                    @Html.ValidationMessageFor(model => model.HR5, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Footer Left : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FL1, htmlAttributes: new { @class = "form-control",@Value = FL1 })
+                    @Html.ValidationMessageFor(model => model.FL1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FL2, htmlAttributes: new { @class = "form-control",  @Value = FL2 })
+                    @Html.ValidationMessageFor(model => model.FL2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FL3, htmlAttributes: new { @class = "form-control",  @Value = FL3 })
+                    @Html.ValidationMessageFor(model => model.FL3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "line 4", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FL4, htmlAttributes: new { @class = "form-control",  @Value = FL4 })
+                    @Html.ValidationMessageFor(model => model.FL4, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Footer Middle : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FM1, htmlAttributes: new { @class = "form-control", @Value = FM1 })
+                    @Html.ValidationMessageFor(model => model.FM1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FM2, htmlAttributes: new { @class = "form-control",  @Value = FM2 })
+                    @Html.ValidationMessageFor(model => model.FM2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FM3, htmlAttributes: new { @class = "form-control", @Value = FM3 })
+                    @Html.ValidationMessageFor(model => model.FM3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Footer Right : ", htmlAttributes: new { @class = "control-label" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "LIne 1", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FR1, htmlAttributes: new { @class = "form-control",  @Value = FR1 })
+                    @Html.ValidationMessageFor(model => model.FR1, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 2", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FR2, htmlAttributes: new { @class = "form-control", @Value = FR2 })
+                    @Html.ValidationMessageFor(model => model.FR2, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 3", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FR3, htmlAttributes: new { @class = "form-control",  @Value = FR3 })
+                    @Html.ValidationMessageFor(model => model.FR3, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Label("name", "Line 4", htmlAttributes: new { @class = "control-label" })
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(model => model.FR4, htmlAttributes: new { @class = "form-control",  @Value = FR4 })
+                    @Html.ValidationMessageFor(model => model.FR4, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <br />
+            @Html.TextBoxFor(model => model.INSLTUDE, new { id = "latlon", style = "display: none;" })
+            <input id="lat" type="hidden" />
+            <input id="lon" type="hidden" />
+            
+            <div class="row">
+                <div class="col-md-10"></div>
+                <div class="col-md-2">
+                    <input type="submit" class="btn btn-primary btn-block" value="Preview" formtarget="_blank" />
+                </div>
+            </div>
+            <br />
+        </div>
+    </div>
+
+
+    //Latitute & longitude
+    <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+    <script language="javascript" type="text/javascript">
+        $(function () {
+            navigator.geolocation.getCurrentPosition(showPosition);
+            //navigator.geolocation.getCurrentPosition(showPosition, positionError);
+
+            function showPosition(position) {
+                var coordinates = position.coords;
+                $("#lat").val(coordinates.latitude);
+                $("#lon").val(coordinates.longitude);
+
+                $("#latlon").val(
+                    $("#lat").val() + "," + $("#lon").val()
+                );
+            }
+        });
+    </script>
+
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryui")
+    @Scripts.Render("~/bundles/jqueryval")
+
+}
